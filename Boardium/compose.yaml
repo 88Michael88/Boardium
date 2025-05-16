@@ -1,0 +1,6 @@
+﻿services:
+  boardium:
+    image: boardium
+    build:
+      context: .
+      dockerfile: Boardium/Dockerfile
