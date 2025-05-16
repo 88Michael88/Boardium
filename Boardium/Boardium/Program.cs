@@ -1,7 +1,19 @@
+using Boardium.Data;
+using Boardium.Models.Auth;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;    
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddDbContext<BoardiumContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DevelopmentConnection")));
+builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
+    {
+        options.SignIn.RequireConfirmedAccount = false;
+    })
+    .AddEntityFrameworkStores<BoardiumContext>();
 
 var app = builder.Build();
 
