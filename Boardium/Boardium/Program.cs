@@ -17,6 +17,20 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    try
+    {
+        await SeedData.InitializeAsync(services);
+    }
+    catch (Exception ex)
+    {
+        //TODO log the error with a proper logger
+        Console.WriteLine(ex.Message);
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {

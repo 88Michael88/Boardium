@@ -2,7 +2,9 @@ namespace Boardium.Models.Rental;
 
 public enum RentalStatus
 {
-    Ongoing,
+    InUse,
     Returned,
-    Overdue
+    Overdue,
+    Canceled,
+    WaitingForPickup,
 }

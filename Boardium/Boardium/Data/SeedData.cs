@@ -138,12 +138,13 @@ public static class SeedData
             );
             context.SaveChanges();
         }
+
         //Seed Rentals
         if (!context.Rentals.Any())
         {
             var gameCopy = context.GameCopies.First();
             var user = await userManager.FindByEmailAsync(userEmail);
-            if(user != null && gameCopy != null)
+            if (user != null && gameCopy != null)
             {
                 context.Rentals.Add(new Rental
                 {
@@ -151,13 +152,13 @@ public static class SeedData
                     ApplicationUserId = user.Id,
                     RentedAt = DateTime.UtcNow.AddDays(-1),
                     DueDate = DateTime.Now.AddDays(10),
-                    Status = RentalStatus.Ongoing,
+                    Status = RentalStatus.InUse,
                     PickupCode = 12345678,
                     RentalFee = gameCopy.RentalFee,
                     PaidFee = gameCopy.RentalFee,
                 });
             }
-            
+
             context.SaveChanges();
         }
     }
