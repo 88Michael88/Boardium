@@ -12,6 +12,7 @@ public class Rental
    [Required]
    public string ApplicationUserId { get; set; }
    public ApplicationUser ApplicationUser { get; set; }
+   public int PickupCode { get; set; }
    
    [DataType(DataType.Date)]
    public DateTime RentedAt { get; set; }
@@ -24,5 +25,7 @@ public class Rental
    public string Notes { get; set; } = string.Empty;
    public decimal? RentalFee { get; set; } = 0;
    public decimal? LateFee { get; set; } = 0;
+   public decimal? DamageFee { get; set; } = 0;
    public decimal PaidFee { get; set; } = 0;
+   
 }
