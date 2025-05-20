@@ -12,11 +12,11 @@ public class ApplicationUser:IdentityUser
     [Required]
     public string LastName { get; set; }
     [MaxLength(64)]
-    public string AddressLine { get; set; }
+    public string? AddressLine { get; set; }
     [MaxLength(32)]
-    public string City { get; set; }
+    public string? City { get; set; }
     [MaxLength(16)]
-    public string PostalCode { get; set; }
+    public string? PostalCode { get; set; }
 
     public ICollection<Rental.Rental> Rentals { get; set; } = new List<Rental.Rental>();
 }

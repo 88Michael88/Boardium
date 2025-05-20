@@ -13,22 +13,15 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     {
         options.SignIn.RequireConfirmedAccount = false;
     })
+    .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<BoardiumContext>();
-
+builder.Services.AddScoped<SeedData>();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    try
-    {
-        await SeedData.InitializeAsync(services);
-    }
-    catch (Exception ex)
-    {
-        //TODO log the error with a proper logger
-        Console.WriteLine(ex.Message);
-    }
+    var seeder = scope.ServiceProvider.GetRequiredService<SeedData>();
+    await seeder.InitializeAsync();
 }
 
 // Configure the HTTP request pipeline.
@@ -41,15 +34,18 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseRouting();
+app.MapRazorPages();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
-
+app.MapControllerRoute(
+    name: "areas",
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
 app.MapControllerRoute(
         name: "default",
         pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

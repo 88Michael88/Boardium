@@ -22,6 +22,24 @@
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration" Version="9.0.0" />
+      <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Views\Games\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Games\Delete.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Games\Details.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Games\Edit.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Games\Index.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Create.cshtml" />
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Delete.cshtml" />
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Details.cshtml" />
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Edit.cshtml" />
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Index.cshtml" />
     </ItemGroup>
 
 </Project>

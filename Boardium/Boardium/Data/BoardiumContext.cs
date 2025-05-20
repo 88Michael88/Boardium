@@ -1,11 +1,13 @@
+using Boardium.Models.Auth;
 using Boardium.Models.Game;
 using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Boardium.Data;
 
-public class BoardiumContext : DbContext
+public class BoardiumContext : IdentityDbContext<ApplicationUser>
 {
     public BoardiumContext(DbContextOptions<BoardiumContext> options) : base(options)
     {
@@ -20,6 +22,7 @@ public class BoardiumContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Models.Game.Game>()
             .HasOne(g => g.Publisher)
             .WithMany(p => p.Games)
