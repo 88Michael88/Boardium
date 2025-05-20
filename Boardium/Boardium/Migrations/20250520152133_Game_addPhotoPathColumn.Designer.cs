@@ -4,6 +4,7 @@ using Boardium.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Boardium.Migrations
 {
     [DbContext(typeof(BoardiumContext))]
-    partial class BoardiumContextModelSnapshot : ModelSnapshot
+    [Migration("20250520152133_Game_addPhotoPathColumn")]
+    partial class Game_addPhotoPathColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -208,8 +211,7 @@ namespace Boardium.Migrations
                         .HasColumnType("bit");
 
                     b.Property<decimal>("RentalFee")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
 
@@ -231,8 +233,7 @@ namespace Boardium.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<decimal?>("DamageFee")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("DueDate")
                         .HasColumnType("datetime2");
@@ -241,8 +242,7 @@ namespace Boardium.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal?>("LateFee")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Notes")
                         .IsRequired()
@@ -250,15 +250,13 @@ namespace Boardium.Migrations
                         .HasColumnType("nvarchar(200)");
 
                     b.Property<decimal>("PaidFee")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("PickupCode")
                         .HasColumnType("int");
 
                     b.Property<decimal?>("RentalFee")
-                        .HasPrecision(10, 2)
-                        .HasColumnType("decimal(10,2)");
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<DateTime>("RentedAt")
                         .HasColumnType("datetime2");

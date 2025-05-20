@@ -17,7 +17,6 @@ public class BoardiumContext : DbContext
     public DbSet<Models.Rental.Rental> Rentals { get; set; }
     public DbSet<Models.Inventory.GameCopy> GameCopies { get; set; }
     
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Models.Game.Game>()
@@ -43,7 +42,5 @@ public class BoardiumContext : DbContext
             .WithMany(g=>g.GameCopies)
             .HasForeignKey(gc=>gc.GameId)
             .OnDelete(DeleteBehavior.Cascade);
-            
-
     }
 }

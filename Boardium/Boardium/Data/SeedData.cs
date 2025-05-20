@@ -18,7 +18,7 @@ public static class SeedData
 
         context.Database.Migrate();
 
-        //seeding Game Categories 
+        //Seeding Game Categories 
         if (!context.GameCategories.Any())
         {
             context.GameCategories.AddRange(
@@ -29,7 +29,7 @@ public static class SeedData
             context.SaveChanges();
         }
 
-        //seeding Publishers
+        //Seeding Publishers
         if (!context.Publishers.Any())
         {
             context.Publishers.AddRange(
@@ -40,7 +40,7 @@ public static class SeedData
             context.SaveChanges();
         }
 
-        //seeding Games
+        //Seeding Games
         if (!context.Games.Any())
         {
             var publisher = context.Publishers.First();
@@ -48,6 +48,7 @@ public static class SeedData
             {
                 Title = "Catan",
                 Description = "Gra planszowa, w której gracze rywalizują o zasoby i budują osady.",
+                PathToImage = "Catan_Example_Game.jpg",
                 MinPlayers = 3,
                 MaxPlayers = 4,
                 MinAge = 10,
@@ -64,7 +65,7 @@ public static class SeedData
             context.SaveChanges();
         }
 
-        //seeding Roles
+        //Seeding Roles
         string[] roles = { "Admin", "User" };
         foreach (var role in roles)
         {
@@ -158,7 +159,6 @@ public static class SeedData
                     PaidFee = gameCopy.RentalFee,
                 });
             }
-
             context.SaveChanges();
         }
     }

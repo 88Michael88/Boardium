@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace Boardium.Models.Inventory;
@@ -12,6 +13,7 @@ public class GameCopy
 
     public bool IsAvailable { get; set; } = true;
     public GameCondition Condition { get; set; }
+    [Precision(10,2)]
     public decimal RentalFee { get; set; }
     public ICollection<Rental.Rental> Rentals { get; set; } = new List<Rental.Rental>();
 
