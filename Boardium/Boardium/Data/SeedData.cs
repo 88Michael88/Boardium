@@ -7,43 +7,52 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Boardium.Data;
 
-public static class SeedData
+public class SeedData
 {
-    public static async Task InitializeAsync(IServiceProvider serviceProvider)
+    private readonly BoardiumContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly ILogger<SeedData> _logger;
+    public SeedData(BoardiumContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        ILogger<SeedData> logger)
     {
-        using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<BoardiumContext>();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-
-        context.Database.Migrate();
+        _context = context;
+        _userManager = userManager;
+        _roleManager = roleManager;
+        _logger = logger;
+    }
+    public  async Task InitializeAsync()
+    {
+        _context.Database.Migrate();
 
         //Seeding Game Categories 
-        if (!context.GameCategories.Any())
+        if (!_context.GameCategories.Any())
         {
-            context.GameCategories.AddRange(
+            _context.GameCategories.AddRange(
                 new GameCategory { Name = "Karcianka" },
                 new GameCategory { Name = "Strategia" },
                 new GameCategory { Name = "Rodzinna" }
             );
-            context.SaveChanges();
+            _context.SaveChanges();
         }
 
         //Seeding Publishers
-        if (!context.Publishers.Any())
+        if (!_context.Publishers.Any())
         {
-            context.Publishers.AddRange(
+            _context.Publishers.AddRange(
                 new Publisher { Name = "Rebel", Website = "https://www.rebel.pl" },
                 new Publisher { Name = "Galakta", Website = "https://www.galakta.pl" },
                 new Publisher { Name = "Catan Studio", Website = "https://www.catanstudio.com" }
             );
-            context.SaveChanges();
+            _context.SaveChanges();
         }
 
         //Seeding Games
-        if (!context.Games.Any())
+        if (!_context.Games.Any())
         {
-            var publisher = context.Publishers.First();
+            var publisher = _context.Publishers.First();
             var game = new Game
             {
                 Title = "Catan",
@@ -57,27 +66,27 @@ public static class SeedData
                 PublisherId = publisher.Id,
                 Categories = new List<GameCategory>
                 {
-                    context.GameCategories.First(g => g.Name == "Strategia"),
-                    context.GameCategories.First(g => g.Name == "Rodzinna")
+                    _context.GameCategories.First(g => g.Name == "Strategia"),
+                    _context.GameCategories.First(g => g.Name == "Rodzinna")
                 }
             };
-            context.Games.Add(game);
-            context.SaveChanges();
+            _context.Games.Add(game);
+            _context.SaveChanges();
         }
 
         //Seeding Roles
         string[] roles = { "Admin", "User" };
         foreach (var role in roles)
         {
-            if (!await roleManager.RoleExistsAsync(role))
+            if (!await _roleManager.RoleExistsAsync(role))
             {
-                await roleManager.CreateAsync(new IdentityRole(role));
+                await _roleManager.CreateAsync(new IdentityRole(role));
             }
         }
 
         //Seed admin user
         var adminEmail = "admin@boardium.pl";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        var adminUser = await _userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
         {
             adminUser = new ApplicationUser
@@ -88,16 +97,16 @@ public static class SeedData
                 FirstName = "Admin",
                 LastName = "Admin"
             };
-            var result = await userManager.CreateAsync(adminUser, "Admin123!");
+            var result = await _userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
+                await _userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
 
         //Seed regular user
         var userEmail = "user@boardium.pl";
-        var regularUser = await userManager.FindByEmailAsync(userEmail);
+        var regularUser = await _userManager.FindByEmailAsync(userEmail);
         if (regularUser == null)
         {
             regularUser = new ApplicationUser
@@ -108,18 +117,18 @@ public static class SeedData
                 FirstName = "User",
                 LastName = "User"
             };
-            var result = await userManager.CreateAsync(regularUser, "User123!");
+            var result = await _userManager.CreateAsync(regularUser, "User123!");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(regularUser, "User");
+                await _userManager.AddToRoleAsync(regularUser, "User");
             }
         }
 
         //Seed Game Copies
-        if (!context.Games.Any())
+        if (!_context.GameCopies.Any())
         {
-            var game = context.Games.First();
-            context.GameCopies.AddRange(
+            var game = _context.Games.First();
+            _context.GameCopies.AddRange(
                 new GameCopy
                 {
                     GameId = game.Id,
@@ -137,17 +146,17 @@ public static class SeedData
                     InventoryNumber = "Cat-002"
                 }
             );
-            context.SaveChanges();
+            _context.SaveChanges();
         }
 
         //Seed Rentals
-        if (!context.Rentals.Any())
+        if (!_context.Rentals.Any())
         {
-            var gameCopy = context.GameCopies.First();
-            var user = await userManager.FindByEmailAsync(userEmail);
+            var gameCopy = _context.GameCopies.First();
+            var user = await _userManager.FindByEmailAsync(userEmail);
             if (user != null && gameCopy != null)
             {
-                context.Rentals.Add(new Rental
+                _context.Rentals.Add(new Rental
                 {
                     GameCopyId = gameCopy.Id,
                     ApplicationUserId = user.Id,
@@ -159,7 +168,8 @@ public static class SeedData
                     PaidFee = gameCopy.RentalFee,
                 });
             }
-            context.SaveChanges();
+            _context.SaveChanges();
         }
+        _logger.Log(LogLevel.Information, "Seeding data finished");
     }
 }
