@@ -6,9 +6,14 @@ namespace Boardium.Models.Game;
 public class Game
 {
     [Key] public int Id { get; set; }
-    [Required] [MaxLength(200)] public string Title { get; set; }
-    
+    [Required]
+    [MaxLength(200)]
+    public string Title { get; set; }
+    [MaxLength(1024)]
     public string? Description { get; set; }
+    [Required]
+    [MaxLength(256)]
+    public string PathToImage { get; set; }
     [Range(1, 100)]
     public int MinPlayers { get; set; }
     [Range(1, 100)]

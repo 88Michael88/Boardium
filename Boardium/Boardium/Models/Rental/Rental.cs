@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 using Boardium.Models.Auth;
 using Boardium.Models.Inventory;
@@ -23,9 +24,13 @@ public class Rental
    public RentalStatus Status { get; set; }
    [MaxLength(200)]
    public string Notes { get; set; } = string.Empty;
+   [Precision(10,2)]
    public decimal? RentalFee { get; set; } = 0;
+   [Precision(10,2)]
    public decimal? LateFee { get; set; } = 0;
+   [Precision(10,2)]
    public decimal? DamageFee { get; set; } = 0;
+   [Precision(10,2)]
    public decimal PaidFee { get; set; } = 0;
    
 }
