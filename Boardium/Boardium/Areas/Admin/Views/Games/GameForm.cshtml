@@ -1,0 +1,77 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Boardium.Areas.Admin.Models.GameFormViewModel
+
+<h2>@Model.FormTitle</h2>
+
+<form asp-action="Save" method="post">
+    <input type="hidden" asp-for="Id" />
+
+    <div class="mb-3">
+        <label asp-for="Title" class="form-label"></label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="Description" class="control-label"></label>
+        <input asp-for="Description" class="form-control" />
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="SelectedCategoryIds"></label>
+        <select  asp-for="SelectedCategoryIds"  multiple class="form-select" id="category-select">
+            @foreach (var category in Model.AllCategories)
+            {
+                if (Model.SelectedCategoryIds.Contains(int.Parse(category.Value)))
+                {
+                    <option value="@category.Value" selected>@category.Text</option>
+                }
+                else
+                {
+                    <option value="@category.Value">@category.Text</option>
+                }
+            }
+        </select>
+    </div>
+    <div class="mb-3">
+        <label asp-for="MinPlayers" class="control-label"></label>
+        <input asp-for="MinPlayers" class="form-control" />
+        <span asp-validation-for="MinPlayers" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="MaxPlayers" class="control-label"></label>
+        <input asp-for="MaxPlayers" class="form-control" />
+        <span asp-validation-for="MaxPlayers" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="MinAge" class="control-label"></label>
+        <input asp-for="MinAge" class="form-control" />
+        <span asp-validation-for="MinAge" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="MaxAge" class="control-label"></label>
+        <input asp-for="MaxAge" class="form-control" />
+        <span asp-validation-for="MaxAge" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="PlayingTimeMinutes" class="control-label"></label>
+        <input asp-for="PlayingTimeMinutes" class="form-control" />
+        <span asp-validation-for="PlayingTimeMinutes" class="text-danger"></span>
+    </div>
+    <div class="mb-3">
+        <label asp-for="PublisherId" class="form-label"></label>
+        <select asp-for="PublisherId" asp-items="Model.PublisherList" class="form-select"></select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+</form>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('#category-select').select2({
+                placeholder: "Choose categories",
+                allowClear: true
+            });
+        });
+    </script>
+}

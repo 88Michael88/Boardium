@@ -1,7 +1,7 @@
 @model Boardium.Models.Game.Game
 
 @{
-    Layout = null;
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.cshtml";
 }
 
 <!DOCTYPE html>
@@ -29,6 +29,11 @@
                 <label asp-for="Description" class="control-label"></label>
                 <input asp-for="Description" class="form-control" />
                 <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PublisherId" class="control-label"></label>
+                <select asp-for="PublisherId" class="form-control" asp-items="ViewBag.PublisherId"></select>
+                <span asp-validation-for="Categories" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="MinPlayers" class="control-label"></label>

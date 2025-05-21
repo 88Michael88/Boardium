@@ -91,7 +91,7 @@ public class SeedData
         {
             adminUser = new ApplicationUser
             {
-                UserName = "admin",
+                UserName = adminEmail,
                 Email = adminEmail,
                 EmailConfirmed = true,
                 FirstName = "Admin",
@@ -111,7 +111,7 @@ public class SeedData
         {
             regularUser = new ApplicationUser
             {
-                UserName = "user",
+                UserName = userEmail,
                 Email = userEmail,
                 EmailConfirmed = true,
                 FirstName = "User",

@@ -9,13 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<BoardiumContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DevelopmentConnection")));
+builder.Services.AddScoped<SeedData>();
+builder.Services.AddAuthentication();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     {
         options.SignIn.RequireConfirmedAccount = false;
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<BoardiumContext>();
-builder.Services.AddScoped<SeedData>();
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
