@@ -7,7 +7,7 @@
     <div class="row">
         <!-- Game Image -->
         <div class="col-md-4 text-center">
-            <img src="@Model.PathToImage" alt="@Model.Title" class="img-fluid rounded shadow-sm" />
+            <img src="@Model.Images.Select(gi=>gi.IsCoverImage)" alt="@Model.Title" class="img-fluid rounded shadow-sm"/>
         </div>
 
         <!-- Game Info -->

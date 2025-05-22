@@ -11,9 +11,6 @@ public class Game
     public string Title { get; set; }
     [MaxLength(1024)]
     public string? Description { get; set; }
-    [Required]
-    [MaxLength(256)]
-    public string PathToImage { get; set; }
     [Range(1, 100)]
     public int MinPlayers { get; set; }
     [Range(1, 100)]
@@ -29,4 +26,5 @@ public class Game
 
     public ICollection<GameCategory> Categories { get; set; } = new List<GameCategory>();
     public ICollection<GameCopy> GameCopies { get; set; } = new List<GameCopy>();
+    public ICollection<GameImage> Images { get; set; } = new List<GameImage>();
 }

@@ -53,11 +53,17 @@ public class SeedData
         if (!_context.Games.Any())
         {
             var publisher = _context.Publishers.First();
+            var image = new GameImage
+            {
+                ImagePath = "Catan_Example_Game.jpg",
+                IsCoverImage = true
+            };
+            _context.GameImages.Add(image);
             var game = new Game
             {
                 Title = "Catan",
                 Description = "Gra planszowa, w której gracze rywalizują o zasoby i budują osady.",
-                PathToImage = "Catan_Example_Game.jpg",
+                Images = new List<GameImage> { image },
                 MinPlayers = 3,
                 MaxPlayers = 4,
                 MinAge = 10,
