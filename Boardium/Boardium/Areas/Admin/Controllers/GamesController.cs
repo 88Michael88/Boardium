@@ -17,10 +17,12 @@ namespace Boardium.Admin.Controllers
     public class GamesController : Controller
     {
         private readonly BoardiumContext _context;
+        private readonly ILogger<GamesController> _logger;
 
-        public GamesController(BoardiumContext context)
+        public GamesController(BoardiumContext context, ILogger<GamesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Games
@@ -66,6 +68,7 @@ namespace Boardium.Admin.Controllers
                         Text = p.Name
                     })
                     .ToListAsync(),
+                ExistingImagePaths = new List<string>()
             };
             return View("GameForm",vm);
         }
@@ -81,7 +84,9 @@ namespace Boardium.Admin.Controllers
                 return NotFound();
             }
 
-            var game = await _context.Games.Include(g => g.Categories).FirstOrDefaultAsync(g => g.Id == id);
+            var game = await _context.Games
+                .Include(g => g.Categories).Include(g => g.Images).FirstOrDefaultAsync(g => g.Id == id);
+                
             if (game == null)
             {
                 return NotFound();
@@ -112,7 +117,10 @@ namespace Boardium.Admin.Controllers
                         Value = p.Id.ToString(),
                         Text = p.Name
                     })
-                    .ToListAsync()
+                    .ToListAsync(),
+                ExistingImagePaths = game.Images.Select(i => i.ImagePath).ToList()?? new(),
+                //CoverImagePath = game.Images.FirstOrDefault(i => i.IsCoverImage)?.ImagePath
+
             };
 
             return View("GameForm", vm);
@@ -137,20 +145,13 @@ namespace Boardium.Admin.Controllers
                         Text = p.Name
                     })
                     .ToListAsync();
-
+                
                 return View("GameForm");
             }
-            // Debug - zobacz co jest w vm.SelectedCategoryIds
-            if (vm.SelectedCategoryIds == null || !vm.SelectedCategoryIds.Any())
-            {
-                Console.WriteLine("SelectedCategoryIds jest puste!");
-            }
-            else
-            {
-                Console.WriteLine("Wybrane kategorie: " + string.Join(", ", vm.SelectedCategoryIds));
-            }
+            
             var game = await _context.Games
                 .Include(g => g.Categories)
+                .Include(g=> g.Images)
                 .FirstOrDefaultAsync(g => g.Id == vm.Id);
 
             if (game == null)
@@ -175,6 +176,60 @@ namespace Boardium.Admin.Controllers
                     game.Categories.Add(cat);    
                 }
                 
+            }
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            if (vm.UploadedImages?.Any() == true)
+            {
+                var gameFolder = Path.Combine("wwwroot", "images", "games", game.Id.ToString());
+                Directory.CreateDirectory(gameFolder);
+                foreach (var file in vm.UploadedImages)
+                {
+                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(extension))
+                    {
+                        continue;
+                    }
+                    var fileName = $"{Guid.NewGuid()}{extension}";
+                    var filePath = Path.Combine(gameFolder, fileName).Replace("\\", "/");
+                    try
+                    {
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        game.Images.Add(new GameImage
+                        {
+                            ImagePath = Path.Combine("images", "games", game.Id.ToString(), fileName).Replace("\\", "/"),
+                            IsCoverImage = false
+                        });
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Log(LogLevel.Error, ex, "Error writing image to images folder");
+                    }
+                    
+                }
+            }
+                _logger.Log(LogLevel.Information, $"Deleting images from images folder Count {vm.DeletedImagePaths?.Count}");
+            if (vm.DeletedImagePaths?.Any() == true)
+            {
+                foreach (var imagePath in vm.DeletedImagePaths)
+                {
+                    _logger.Log(LogLevel.Information, "Deleting image: {imagePath}", imagePath);
+                    var image = game.Images.FirstOrDefault(i => i.ImagePath == imagePath);
+                    if (image != null)
+                    {
+                        game.Images.Remove(image);
+                        _context.GameImages.Remove(image);
+                        var fullPath = Path.Combine("wwwroot", imagePath);
+                        if (System.IO.File.Exists(fullPath))
+                        {
+                            System.IO.File.Delete(fullPath);
+                        }
+                    }
+                }
             }
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

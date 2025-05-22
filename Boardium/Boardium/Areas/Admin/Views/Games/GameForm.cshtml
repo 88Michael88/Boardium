@@ -3,7 +3,7 @@
 
 <h2>@Model.FormTitle</h2>
 
-<form asp-action="Save" method="post">
+<form asp-action="Save" method="post" enctype="multipart/form-data">
     <input type="hidden" asp-for="Id" />
 
     <div class="mb-3">
@@ -11,6 +11,24 @@
         <input asp-for="Title" class="form-control" />
         <span asp-validation-for="Title" class="text-danger"></span>
     </div>
+    <div class="mb-3">
+        <label asp-for="UploadedImages">Add photos</label>
+        <input type="file" asp-for="UploadedImages" id="UploadedImages" class="form-control" multiple  />
+    </div>
+    @if (Model.ExistingImagePaths?.Any() == true)
+    {
+        <div class="mb-3 d-flex flex-wrap gap-2">
+
+            @foreach (var path in Model.ExistingImagePaths)
+            {
+                <div class="image-container position-relative" data-path="@path" style="display: inline-block;">
+                    <img src="@Url.Content("/" + path)"  style="height: 100px; border: 1px solid #ccc; padding: 4px;"/>
+                    
+                    <button type="button" class="btn-close btn-sm position-absolute top-0 end-0 remove-image-btn" aria-label="Close" title="Usuń" data-path="@path"></button>
+                </div>   
+            }
+        </div>
+    }
     <div class="mb-3">
         <label asp-for="Description" class="control-label"></label>
         <input asp-for="Description" class="form-control" />
@@ -63,9 +81,22 @@
     </div>
 
     <button type="submit" class="btn btn-primary">Save</button>
+<div id="images-to-delete-container"></div>
 </form>
-
 @section Scripts {
+    <script>
+        document.querySelectorAll('.remove-image-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const path = btn.getAttribute('data-path');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'DeletedImagePaths';
+                input.value = path;
+                document.getElementById('images-to-delete-container').appendChild(input);
+                btn.parentElement.remove();
+            });
+        });
+    </script>
     <script>
         $(document).ready(function () {
             $('#category-select').select2({

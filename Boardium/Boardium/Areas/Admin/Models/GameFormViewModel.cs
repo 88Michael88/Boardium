@@ -24,5 +24,9 @@ public class GameFormViewModel
     [Display(Name = "Categories")] public List<SelectListItem> PublisherList { get; set; } = new();
     public List<int> SelectedCategoryIds {get; set;} = new();
     public List<SelectListItem> AllCategories {get; set;} = new();
+    public List<IFormFile> UploadedImages { get; set; } = new();
+    public List<string> ExistingImagePaths { get; set; } = new();
+    public List<string> DeletedImagePaths { get; set; } = new();
+    //public string? CoverImagePath { get; set; }
     public string FormTitle => Id == null ? "Create Game" : "Edit Game";
 }
