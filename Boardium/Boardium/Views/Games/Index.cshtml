@@ -1,6 +1,47 @@
-﻿@{
-    ViewData["Title"] = "Index";
+﻿@model BoardGameViewModel
+@{
+    ViewData["Title"] = "Available Games - Boardium";
 }
 
-<h1>Index</h1>
+<div class="container mt-5">
+    <h2 class="mb-4 text-center">Available Board Games</h2>
 
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Title</th>
+                <th>Publisher</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var game in Model.Games) {
+                <tr>
+                    <td style="width: 150px;">
+                        <img src="@game.PathToImage" alt="@game.Title" class="img-fluid rounded" style="max-height: 100px;" />
+                    </td>
+                    <td>@game.Title</td>
+                    <td>@game.Publisher</td>
+                    <td>@game.Description</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between mt-4">
+        <form asp-controller="Games" asp-action="Index" method="get">
+            @if (Model.HasPreviousPage) {
+                <input type="hidden" name="page" value="@(Model.CurrentPage - 1)" />
+                <button type="submit" class="btn btn-secondary">Previous</button>
+            }
+        </form>
+
+        <form asp-controller="Games" asp-action="Index" method="get">
+            @if (Model.HasNextPage) {
+                <input type="hidden" name="page" value="@(Model.CurrentPage + 1)" />
+                <button type="submit" class="btn btn-primary">Next</button>
+            }
+        </form>
+    </div>
+</div>

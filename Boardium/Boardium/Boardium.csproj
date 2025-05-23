@@ -31,7 +31,6 @@
       <_ContentIncludedByDefault Remove="Views\Games\Delete.cshtml" />
       <_ContentIncludedByDefault Remove="Views\Games\Details.cshtml" />
       <_ContentIncludedByDefault Remove="Views\Games\Edit.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Games\Index.cshtml" />
     </ItemGroup>
 
     <ItemGroup>
