@@ -18,8 +18,8 @@
         <tbody>
             @foreach (var game in Model.Games) {
                 <tr>
-                    <td style="width: 150px;">
-                        <img src="@game.PathToImage" alt="@game.Title" class="img-fluid rounded" style="max-height: 100px;" />
+                    <td style="width: 250px;">
+                        <img src="@Url.Content($"~/pictures/{game.Id}/{game.PathToImage}")" alt="@game.Title" class="img-fluid rounded" style="max-height: 100px;" />
                     </td>
                     <td>@game.Title</td>
                     <td>@game.Publisher</td>

@@ -26,6 +26,7 @@ namespace Boardium.Controllers {
                                                join p in _context.Publishers on g.PublisherId equals p.Id
                                                where gi.IsCoverImage
                                                select new BoardGame {
+                                                   Id = g.Id,
                                                    Title = g.Title,
                                                    Description = g.Description,
                                                    PathToImage = gi.ImagePath,
@@ -43,6 +44,7 @@ namespace Boardium.Controllers {
                 HasPreviousPage = currentPage > 1,
                 HasNextPage = currentPage * pageSize < totalGames,
                 Games = boardGames.Select(g => new BoardGame {
+                    Id = g.Id,
                     Title = g.Title,
                     Publisher = g.Publisher,
                     Description = g.Description,
