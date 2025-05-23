@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Boardium.Areas.Admin.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -16,22 +17,22 @@ namespace Boardium.Admin.Controllers
     public class GamesController : Controller
     {
         private readonly BoardiumContext _context;
+        private readonly ILogger<GamesController> _logger;
 
-        public GamesController(BoardiumContext context)
+        public GamesController(BoardiumContext context, ILogger<GamesController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Games
-        [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-            var boardiumContext = _context.Games.Include(g => g.Publisher).Include(g=>g.Categories);
+            var boardiumContext = _context.Games.Include(g => g.Publisher).Include(g => g.Categories);
             return View(await boardiumContext.ToListAsync());
         }
 
         // GET: Games/Details/5
-        [AllowAnonymous]
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -51,30 +52,31 @@ namespace Boardium.Admin.Controllers
         }
 
         // GET: Games/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["PublisherId"] = new SelectList(_context.Publishers, "Id", "Name");
-            return View();
-        }
-
-        // POST: Games/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Description,MinPlayers,MaxPlayers,MinAge,MaxAge,PlayingTimeMinutes,PublisherId")] Game game)
-        {
-            if (ModelState.IsValid)
+            var vm = new GameFormViewModel
             {
-                _context.Add(game);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            ViewData["PublisherId"] = new SelectList(_context.Publishers, "Id", "Name", game.PublisherId);
-            return View(game);
+                AllCategories = await _context.GameCategories.Select(gc => new SelectListItem
+                {
+                    Value = gc.Id.ToString(),
+                    Text = gc.Name,
+                }).ToListAsync(),
+                PublisherList = await _context.Publishers
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.Id.ToString(),
+                        Text = p.Name
+                    })
+                    .ToListAsync(),
+                ExistingImagePaths = new List<string>()
+            };
+            return View("GameForm",vm);
         }
+        
 
         // GET: Games/Edit/5
+        [Authorize(Roles = "Admin,Employee")]
+        [HttpGet]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -82,49 +84,156 @@ namespace Boardium.Admin.Controllers
                 return NotFound();
             }
 
-            var game = await _context.Games.FindAsync(id);
+            var game = await _context.Games
+                .Include(g => g.Categories).Include(g => g.Images).FirstOrDefaultAsync(g => g.Id == id);
+                
             if (game == null)
             {
                 return NotFound();
             }
-            ViewData["PublisherId"] = new SelectList(_context.Publishers, "Id", "Name", game.PublisherId);
-            return View(game);
+
+            var selectetCategoriesId = game.Categories.Select(c => c.Id).ToList();
+
+            var vm = new GameFormViewModel
+            {
+                Id = game.Id,
+                Title = game.Title,
+                Description = game.Description,
+                MinPlayers = game.MinPlayers,
+                MaxPlayers = game.MaxPlayers,
+                MinAge = game.MinAge,
+                MaxAge = game.MaxAge,
+                PlayingTimeMinutes = game.PlayingTimeMinutes,
+                PublisherId = game.PublisherId,
+                SelectedCategoryIds = selectetCategoriesId,
+                AllCategories = await _context.GameCategories.Select(gc => new SelectListItem
+                {
+                    Value = gc.Id.ToString(),
+                    Text = gc.Name,
+                }).ToListAsync(),
+                PublisherList = await _context.Publishers
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.Id.ToString(),
+                        Text = p.Name
+                    })
+                    .ToListAsync(),
+                ExistingImagePaths = game.Images.Select(i => i.ImagePath).ToList()?? new(),
+                //CoverImagePath = game.Images.FirstOrDefault(i => i.IsCoverImage)?.ImagePath
+
+            };
+
+            return View("GameForm", vm);
         }
 
-        // POST: Games/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+     
+    
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Title,Description,MinPlayers,MaxPlayers,MinAge,MaxAge,PlayingTimeMinutes,PublisherId")] Game game)
+        public async Task<IActionResult> Save(GameFormViewModel vm)
         {
-            if (id != game.Id)
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                vm.AllCategories = await _context.GameCategories.Select(gc => new SelectListItem
+                {
+                    Value = gc.Id.ToString(),
+                    Text = gc.Name,
+                }).ToListAsync();
+                vm.PublisherList = await _context.Publishers
+                    .Select(p => new SelectListItem
+                    {
+                        Value = p.Id.ToString(),
+                        Text = p.Name
+                    })
+                    .ToListAsync();
+                
+                return View("GameForm");
             }
+            
+            var game = await _context.Games
+                .Include(g => g.Categories)
+                .Include(g=> g.Images)
+                .FirstOrDefaultAsync(g => g.Id == vm.Id);
 
-            if (ModelState.IsValid)
+            if (game == null)
             {
-                try
-                {
-                    _context.Update(game);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!GameExists(game.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                game = new Game();
+                _context.Games.Add(game);
             }
-            ViewData["PublisherId"] = new SelectList(_context.Publishers, "Id", "Name", game.PublisherId);
-            return View(game);
+            game.Title = vm.Title;
+            game.PublisherId = vm.PublisherId;
+            game.MinPlayers = vm.MinPlayers;
+            game.MaxPlayers = vm.MaxPlayers;
+            game.MinAge = vm.MinAge;
+            game.MaxAge = vm.MaxAge;
+            game.PlayingTimeMinutes = vm.PlayingTimeMinutes;
+            game.Description = vm.Description;
+            game.Categories.Clear();
+            foreach (var catId in vm.SelectedCategoryIds ?? new List<int>())
+            {
+                var cat = await _context.GameCategories.FindAsync(catId);
+                if (cat != null)
+                {
+                    game.Categories.Add(cat);    
+                }
+                
+            }
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
+            if (vm.UploadedImages?.Any() == true)
+            {
+                var gameFolder = Path.Combine("wwwroot", "images", "games", game.Id.ToString());
+                Directory.CreateDirectory(gameFolder);
+                foreach (var file in vm.UploadedImages)
+                {
+                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                    if (!allowedExtensions.Contains(extension))
+                    {
+                        continue;
+                    }
+                    var fileName = $"{Guid.NewGuid()}{extension}";
+                    var filePath = Path.Combine(gameFolder, fileName).Replace("\\", "/");
+                    try
+                    {
+                        using (var stream = new FileStream(filePath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        game.Images.Add(new GameImage
+                        {
+                            ImagePath = Path.Combine("images", "games", game.Id.ToString(), fileName).Replace("\\", "/"),
+                            IsCoverImage = false
+                        });
+                        
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.Log(LogLevel.Error, ex, "Error writing image to images folder");
+                    }
+                    
+                }
+            }
+                _logger.Log(LogLevel.Information, $"Deleting images from images folder Count {vm.DeletedImagePaths?.Count}");
+            if (vm.DeletedImagePaths?.Any() == true)
+            {
+                foreach (var imagePath in vm.DeletedImagePaths)
+                {
+                    _logger.Log(LogLevel.Information, "Deleting image: {imagePath}", imagePath);
+                    var image = game.Images.FirstOrDefault(i => i.ImagePath == imagePath);
+                    if (image != null)
+                    {
+                        game.Images.Remove(image);
+                        _context.GameImages.Remove(image);
+                        var fullPath = Path.Combine("wwwroot", imagePath);
+                        if (System.IO.File.Exists(fullPath))
+                        {
+                            System.IO.File.Delete(fullPath);
+                        }
+                    }
+                }
+            }
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+
         }
 
         // GET: Games/Delete/5

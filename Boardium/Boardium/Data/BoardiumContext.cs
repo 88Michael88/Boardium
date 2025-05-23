@@ -2,6 +2,7 @@ using Boardium.Models.Auth;
 using Boardium.Models.Game;
 using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
+
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
@@ -18,6 +19,7 @@ public class BoardiumContext : IdentityDbContext<ApplicationUser>
     public DbSet<Models.Game.GameCategory> GameCategories { get; set; }
     public DbSet<Models.Rental.Rental> Rentals { get; set; }
     public DbSet<Models.Inventory.GameCopy> GameCopies { get; set; }
+    public DbSet<GameImage> GameImages { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -30,6 +32,9 @@ public class BoardiumContext : IdentityDbContext<ApplicationUser>
         modelBuilder.Entity<Game>()
             .HasMany(g => g.Categories)
             .WithMany(gc => gc.Games);
+        modelBuilder.Entity<Game>()
+            .HasMany(g => g.Images)
+            .WithOne(gi => gi.Game);
         modelBuilder.Entity<Rental>()
             .HasOne(r => r.ApplicationUser)
             .WithMany(u => u.Rentals)
@@ -45,5 +50,6 @@ public class BoardiumContext : IdentityDbContext<ApplicationUser>
             .WithMany(g=>g.GameCopies)
             .HasForeignKey(gc=>gc.GameId)
             .OnDelete(DeleteBehavior.Cascade);
+        
     }
 }
