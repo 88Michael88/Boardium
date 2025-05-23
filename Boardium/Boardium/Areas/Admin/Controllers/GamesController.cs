@@ -9,7 +9,7 @@ using Boardium.Data;
 using Boardium.Models.Game;
 using Microsoft.AspNetCore.Authorization;
 
-namespace Boardium.Controllers
+namespace Boardium.Admin.Controllers
 {
     [Authorize(Roles = "Admin,Employee")]
     [Area("Admin")]

@@ -16,5 +16,4 @@ public class GameCopy
     [Precision(10,2)]
     public decimal RentalFee { get; set; }
     public ICollection<Rental.Rental> Rentals { get; set; } = new List<Rental.Rental>();
-
 }
