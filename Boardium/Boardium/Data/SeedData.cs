@@ -4,6 +4,7 @@ using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Mono.TextTemplating;
 
 namespace Boardium.Data;
 
@@ -44,6 +45,8 @@ public class SeedData
             _context.Publishers.AddRange(
                 new Publisher { Name = "Rebel", Website = "https://www.rebel.pl" },
                 new Publisher { Name = "Galakta", Website = "https://www.galakta.pl" },
+                new Publisher { Name = "Portal Games", Website = "https://portalgames.pl" },
+                new Publisher { Name = "Lucky Duck Games", Website = "https://luckyduckgames.com" },
                 new Publisher { Name = "Catan Studio", Website = "https://www.catanstudio.com" }
             );
             _context.SaveChanges();
@@ -52,31 +55,64 @@ public class SeedData
         //Seeding Games
         if (!_context.Games.Any())
         {
-            var publisher = _context.Publishers.First();
-            var image = new GameImage
-            {
-                ImagePath = "Catan_Example_Game.jpg",
-                IsCoverImage = true
-            };
-            _context.GameImages.Add(image);
-            var game = new Game
-            {
+            var catanStudio = _context.Publishers.First(p => p.Name == "Catan Studio");
+            var portalGames = _context.Publishers.First(p => p.Name == "Portal Games");
+            var rebel = _context.Publishers.First(p => p.Name == "Rebel");
+
+            var catanImage = new GameImage { ImagePath = "Catan_Example_Game.jpg", IsCoverImage = true };
+            var detImage = new GameImage { ImagePath = "Detektyw_Example.jpg", IsCoverImage = true };
+            var dixitImage = new GameImage { ImagePath = "Dixit_Example.jpg", IsCoverImage = true };
+
+            _context.GameImages.AddRange(catanImage, detImage, dixitImage);
+
+            var catan = new Game {
                 Title = "Catan",
                 Description = "Gra planszowa, w której gracze rywalizują o zasoby i budują osady.",
-                Images = new List<GameImage> { image },
+                Images = new List<GameImage> { catanImage },
                 MinPlayers = 3,
                 MaxPlayers = 4,
                 MinAge = 10,
                 MaxAge = 99,
                 PlayingTimeMinutes = 90,
-                PublisherId = publisher.Id,
-                Categories = new List<GameCategory>
-                {
+                PublisherId = catanStudio.Id,
+                Categories = new List<GameCategory> {
                     _context.GameCategories.First(g => g.Name == "Strategia"),
                     _context.GameCategories.First(g => g.Name == "Rodzinna")
                 }
             };
-            _context.Games.Add(game);
+
+            var detective = new Game {
+                Title = "Detektyw",
+                Description = "Wciel się w rolę detektywa i rozwiąż zagadki kryminalne.",
+                Images = new List<GameImage> { detImage },
+                MinPlayers = 1,
+                MaxPlayers = 5,
+                MinAge = 16,
+                MaxAge = 99,
+                PlayingTimeMinutes = 120,
+                PublisherId = portalGames.Id,
+                Categories = new List<GameCategory> {
+                    _context.GameCategories.First(g => g.Name == "Strategia"),
+                    _context.GameCategories.First(g => g.Name == "Rodzinna")
+                }
+            };
+
+            var dixit = new Game {
+                Title = "Dixit",
+                Description = "Gra skojarzeń z pięknie ilustrowanymi kartami.",
+                Images = new List<GameImage> { dixitImage },
+                MinPlayers = 3,
+                MaxPlayers = 6,
+                MinAge = 8,
+                MaxAge = 99,
+                PlayingTimeMinutes = 30,
+                PublisherId = rebel.Id,
+                Categories = new List<GameCategory> {
+                    _context.GameCategories.First(g => g.Name == "Rodzinna"),
+                }
+            };
+
+            _context.Games.AddRange(catan, detective, dixit);
             _context.SaveChanges();
         }
 
@@ -133,23 +169,40 @@ public class SeedData
         //Seed Game Copies
         if (!_context.GameCopies.Any())
         {
-            var game = _context.Games.First();
+            var catan = _context.Games.First(g => g.Title == "Catan");
+            var detective = _context.Games.First(g => g.Title == "Detektyw");
+            var dixit = _context.Games.First(g => g.Title == "Dixit");
+            // Catan
             _context.GameCopies.AddRange(
-                new GameCopy
-                {
-                    GameId = game.Id,
+                new GameCopy {
+                    GameId = catan.Id,
                     Condition = GameCondition.Good,
                     IsAvailable = true,
                     RentalFee = 10.00m,
                     InventoryNumber = "Cat-001"
                 },
-                new GameCopy
-                {
-                    GameId = game.Id,
+                new GameCopy {
+                    GameId = catan.Id,
                     Condition = GameCondition.Used,
                     IsAvailable = true,
                     RentalFee = 8.00m,
                     InventoryNumber = "Cat-002"
+                },
+                // Detektyw
+                new GameCopy {
+                    GameId = detective.Id,
+                    Condition = GameCondition.Good,
+                    IsAvailable = true,
+                    RentalFee = 12.00m,
+                    InventoryNumber = "Det-001"
+                },
+                // Dixit
+                new GameCopy {
+                    GameId = dixit.Id,
+                    Condition = GameCondition.Good,
+                    IsAvailable = true,
+                    RentalFee = 9.00m,
+                    InventoryNumber = "Dix-001"
                 }
             );
             _context.SaveChanges();
