@@ -1,4 +1,5 @@
-﻿@model BoardGameViewModel;
+﻿@model BoardGameViewModel
+
 @{
     ViewData["Title"] = Model.Title;
 }
@@ -6,45 +7,50 @@
 <div class="container mt-5">
     <h1 class="mb-4">@Model.Title</h1>
 
-    <!-- Image Carousel -->
-    <div id="gameCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
-        <div class="carousel-inner">
-            @for (int i = 0; i < Model.PathsToImages.Count(); i++)
-            {
-                <div class="carousel-item @(i == 0 ? "active" : "")">
-                    <img src="@Url.Content($"~/pictures/{@Model.Id}/{@Model.PathsToImages[i]}")" class="d-block w-100" alt="Game image @i">
-                </div>
-            }
-        </div>
-        <button class="carousel-control-prev" type="button" data-bs-target="#gameCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#gameCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon"></span>
-        </button>
-    </div>
-
-    <!-- Game Info -->
     <div class="row">
-        <div class="col-md-8">
+        <!-- Carousel Column -->
+        <div class="col-md-5">
+            <div id="gameCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner" style="width: 380px; height: 380px; margin: 0 auto;">
+                    @for (int i = 0; i < Model.PathsToImages.Count(); i++) {
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <img src="@Url.Content($"~/pictures/{Model.Id}/{Model.PathsToImages[i]}")"
+                                 class="d-block mx-auto"
+                                 style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                                 alt="Game image @i">
+                        </div>
+                    }
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#gameCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" style="background-color: black; width: 2rem; height: 2rem;"></span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#gameCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" style="background-color: black; width: 2rem; height: 2rem;"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Game Info Column -->
+        <div class="col-md-7">
             <h4>Description</h4>
             <p>@Model.Description</p>
 
-            <ul class="list-group list-group-flush">
+            <ul class="list-group list-group-flush mb-4">
                 <li class="list-group-item"><strong>Players:</strong> @Model.MinPlayers - @Model.MaxPlayers</li>
                 <li class="list-group-item"><strong>Playing Time:</strong> @Model.PlayingTimeMinutes minutes</li>
-                <li class="list-group-item"><strong>Categories:</strong>
-                    @foreach (var category in Model.Categories)
-                    {
+                <li class="list-group-item">
+                    <strong>Categories:</strong>
+                    @foreach (var category in Model.Categories) {
                         <span class="badge bg-secondary me-1">@category</span>
                     }
                 </li>
             </ul>
 
-            <h4 class="mt-4">Publisher</h4>
-            <p><strong>@Model.Publisher.Name</strong><br />
-               @Model.Publisher.Website</p>
-        </div>
+            <h4>Publisher</h4>
+            <p>
+                <strong>@Model.Publisher.Name</strong><br />
+                <a href="@Model.Publisher.Website" target="_blank">@Model.Publisher.Website</a>
+            </p>
 
         <!-- Copies -->
         <div class="col-md-4">
