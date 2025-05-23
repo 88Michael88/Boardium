@@ -14,7 +14,7 @@ namespace Boardium.Controllers {
             _logger = logger;
         }
 
-        public IActionResult BoardGames() {
+        public IActionResult BoardGame(int? gameIndex) {
             return View();
         }
 
@@ -37,7 +37,7 @@ namespace Boardium.Controllers {
             int totalGames = await _context.Games
                                            .CountAsync();
 
-            BoardGameViewModel model = new BoardGameViewModel {
+            BoardGameTableViewModel model = new BoardGameTableViewModel {
                 CurrentPage = currentPage,
                 HasPreviousPage = currentPage > 1,
                 HasNextPage = currentPage * pageSize < totalGames,
