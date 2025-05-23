@@ -13,6 +13,7 @@ namespace Boardium.Controllers {
             _context = context;
             _logger = logger;
         }
+
         public IActionResult BoardGames() {
             return View();
         }
@@ -33,11 +34,8 @@ namespace Boardium.Controllers {
                                                    Publisher = p.Name
                                                }).ToListAsync();
 
-
-
             int totalGames = await _context.Games
                                            .CountAsync();
-
 
             BoardGameViewModel model = new BoardGameViewModel {
                 CurrentPage = currentPage,

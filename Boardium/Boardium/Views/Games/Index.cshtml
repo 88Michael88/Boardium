@@ -17,7 +17,7 @@
         </thead>
         <tbody>
             @foreach (var game in Model.Games) {
-                <tr>
+                <tr style="cursor: pointer;" onclick="window.location.href='@Url.Action("BoardGames",  new { id = game.Id })'">
                     <td style="width: 250px;">
                         <img src="@Url.Content($"~/pictures/{game.Id}/{game.PathToImage}")" alt="@game.Title" class="img-fluid rounded" style="max-height: 100px;" />
                     </td>
