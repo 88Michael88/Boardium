@@ -2,6 +2,7 @@
 using Boardium.Models;
 using Boardium.Data;
 using Microsoft.EntityFrameworkCore;
+using Boardium.Models.Game;
 
 namespace Boardium.Controllers {
     public class GamesController : Controller {
@@ -14,8 +15,33 @@ namespace Boardium.Controllers {
             _logger = logger;
         }
 
-        public IActionResult BoardGame(int? gameIndex) {
-            return View();
+        public async Task<IActionResult> BoardGame(int? gameIndex) {
+            Game? game = await _context.Games
+                .Include(g => g.Categories)
+                .FirstOrDefaultAsync(g => g.Id == gameIndex);
+
+            if (game == null) return NotFound();
+
+            string[] categories = game.Categories.Select(c => c.Name).ToArray();
+            string[] pathsToImages = await _context.GameImages.Where(gi => gi.GameId == gameIndex).Select(gi => gi.ImagePath).ToArrayAsync();
+
+            Publisher publisher = await _context.Publishers.Where(p => p.Id == game.PublisherId).FirstAsync();
+
+            BoardGameViewModel model = new BoardGameViewModel {
+                Id = game.Id,
+                Title = game.Title,
+                Publisher = publisher,
+                Description = game.Description,
+                MinPlayers = game.MinPlayers,
+                MaxPlayers = game.MaxPlayers,
+                MinAge = game.MinAge,
+                MaxAge = game.MaxAge,
+                PlayingTimeMinutes = game.PlayingTimeMinutes,
+                PathsToImages = pathsToImages,
+                Categories = categories
+            };
+
+            return View(model);
         }
 
         public async Task<IActionResult> Index(int? page) {

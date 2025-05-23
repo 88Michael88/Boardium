@@ -4,7 +4,7 @@ namespace Boardium.Models {
     public class BoardGameViewModel {
         public int Id { get; set; }
         public string Title { get; set; }
-        public Publisher publisher{ get; set; }
+        public Publisher Publisher{ get; set; }
         public string Description { get; set; }
         public int MinPlayers { get; set; }
         public int MaxPlayers { get; set; }

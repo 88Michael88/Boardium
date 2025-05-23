@@ -20,7 +20,7 @@ public class BoardiumContext : IdentityDbContext<ApplicationUser>
     public DbSet<Models.Rental.Rental> Rentals { get; set; }
     public DbSet<Models.Inventory.GameCopy> GameCopies { get; set; }
     public DbSet<Models.Game.GameImage> GameImages { get; set; }
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
