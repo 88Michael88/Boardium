@@ -60,6 +60,9 @@ public class SeedData
             var rebel = _context.Publishers.First(p => p.Name == "Rebel");
 
             var catanImage = new GameImage { ImagePath = "Catan_Example_Game.jpg", IsCoverImage = true };
+            var catanGameplayImage = new GameImage { ImagePath = "Catan_Gameplay.jpg", IsCoverImage = false };
+            var catanGameplay2Image = new GameImage { ImagePath = "Catan_Gameplay2.jpg", IsCoverImage = false };
+            var catanBoardImage = new GameImage { ImagePath = "Catan_Board.jpg", IsCoverImage = false };
             var detImage = new GameImage { ImagePath = "Detektyw_Example.jpg", IsCoverImage = true };
             var dixitImage = new GameImage { ImagePath = "Dixit_Example.jpg", IsCoverImage = true };
 
@@ -68,7 +71,7 @@ public class SeedData
             var catan = new Game {
                 Title = "Catan",
                 Description = "Gra planszowa, w której gracze rywalizują o zasoby i budują osady.",
-                Images = new List<GameImage> { catanImage },
+                Images = new List<GameImage> { catanImage, catanGameplayImage, catanGameplay2Image, catanBoardImage },
                 MinPlayers = 3,
                 MaxPlayers = 4,
                 MinAge = 10,
