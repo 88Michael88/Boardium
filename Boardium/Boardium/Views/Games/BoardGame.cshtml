@@ -53,17 +53,27 @@
             </p>
 
         <!-- Copies -->
-        <div class="col-md-4">
-            <h4>@(Model.GameCopies.Count() == 0 ? "No Copies Available" : "Available Copies")</h4>
-            <ul class="list-group">
-                    @foreach (var copy in Model.GameCopies) {
-                        <a href="@Url.Action("Index", "Rentals", new { id = copy.InventoryNumber })" class="text-decoration-none">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Copy #@copy.InventoryNumber
-                            </li>
-                        </a>
-                    }
-            </ul>
+            <div class="col-md-6">
+                <h4>@(Model.GameCopies.Count() == 0 ? "No Copies Available" : "Available Copies")</h4>
+
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">Copy #</th>
+                            <th scope="col">Condition</th>
+                            <th scope="col">Rental Fee</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var copy in Model.GameCopies) {
+                            <tr onclick="location.href='@Url.Action("Index", "Rentals", new { id = copy.InventoryNumber })'" style="cursor:pointer;">
+                                <td>@copy.InventoryNumber</td>
+                                <td>@copy.Condition</td>
+                                <td>@copy.RentalFee.ToString("C")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
 </div>
