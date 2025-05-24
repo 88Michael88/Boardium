@@ -54,18 +54,16 @@
 
         <!-- Copies -->
         <div class="col-md-4">
-            <h4>Game Copies</h4>
-            <!--<ul class="list-group">-->
-               <!--< @@foreach (var copy in Model.Copies) -->
-                <!--{-->
-                    <!--<li class="list-group-item d-flex justify-content-between align-items-center">-->
-                        <!--Copy #@@copy.Id-->
-                        <!--<span class="badge @@(copy.IsAvailable ? "bg-success" : "bg-danger")">-->
-                           <!-- @@(copy.IsAvailable ? "Available" : "Unavailable")-->
-                        <!--</span>-->
-                    <!--</li>-->
-                <!--}-->
-            <!--</ul>-->
+            <h4>@(Model.GameCopies.Count() == 0 ? "No Copies Available" : "Available Copies")</h4>
+            <ul class="list-group">
+                    @foreach (var copy in Model.GameCopies) {
+                        <a href="@Url.Action("Index", "Rentals", new { id = copy.InventoryNumber })" class="text-decoration-none">
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                Copy #@copy.InventoryNumber
+                            </li>
+                        </a>
+                    }
+            </ul>
         </div>
     </div>
 </div>

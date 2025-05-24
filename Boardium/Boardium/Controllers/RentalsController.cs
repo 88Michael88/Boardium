@@ -2,7 +2,7 @@
 
 namespace Boardium.Controllers {
     public class RentalsController : Controller {
-        public IActionResult Index() {
+        public IActionResult Index(string? id) {
             return View();
         }
     }

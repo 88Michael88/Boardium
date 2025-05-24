@@ -1,4 +1,5 @@
 ﻿using Boardium.Models.Game;
+using Boardium.Models.Inventory;
 
 namespace Boardium.Models {
     public class BoardGameViewModel {
@@ -13,5 +14,13 @@ namespace Boardium.Models {
         public int PlayingTimeMinutes { get; set; }
         public string[] Categories { get; set; }
         public string[] PathsToImages { get; set; }
+        public GameAvailableCopy[] GameCopies { get; set; }
+    }
+
+    public class GameAvailableCopy {
+        public int Id { get; set; }
+        public string InventoryNumber { get; set; }
+        public GameCondition Condition { get; set; }
+        public decimal RentalFee { get; set; }
     }
 }

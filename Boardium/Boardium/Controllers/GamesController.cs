@@ -27,6 +27,19 @@ namespace Boardium.Controllers {
 
             Publisher publisher = await _context.Publishers.Where(p => p.Id == game.PublisherId).FirstAsync();
 
+            GameAvailableCopy[] gameCopies = await (from gc in _context.GameCopies
+                                                   where !(from r in _context.Rentals
+                                                           where r.ReturnedAt == null
+                                                           select r.GameCopyId).Contains(gc.Id)
+                                                   && gc.GameId == gameIndex
+                                                   select new GameAvailableCopy {
+                                                       Id = gc.Id,
+                                                       Condition = gc.Condition,
+                                                       InventoryNumber = gc.InventoryNumber,
+                                                       RentalFee = gc.RentalFee
+                                                   }
+                                                   ).ToArrayAsync();
+
             BoardGameViewModel model = new BoardGameViewModel {
                 Id = game.Id,
                 Title = game.Title,
@@ -38,7 +51,8 @@ namespace Boardium.Controllers {
                 MaxAge = game.MaxAge,
                 PlayingTimeMinutes = game.PlayingTimeMinutes,
                 PathsToImages = pathsToImages,
-                Categories = categories
+                Categories = categories,
+                GameCopies = gameCopies
             };
 
             return View(model);

@@ -19,7 +19,7 @@
             @foreach (var game in Model.Games) {
                 <tr style="cursor: pointer;" onclick="window.location.href='@Url.Action("BoardGame",  new { gameIndex = game.Id })'">
                     <td style="width: 250px;">
-                        <img src="@Url.Content($"~/pictures/{game.Id}/{game.PathToImage}")" alt="@game.Title" class="img-fluid rounded" style="max-height: 100px;" />
+                        <img src="@Url.Content($"~/pictures/{game.Id}/lowres/{game.PathToImage}")" alt="@game.Title" class="img-fluid rounded" style="max-height: 100px;" />
                     </td>
                     <td>@game.Title</td>
                     <td>@game.Publisher</td>
