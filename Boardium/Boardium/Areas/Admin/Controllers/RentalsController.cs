@@ -47,6 +47,36 @@ namespace Boardium.Areas.Admin.Controllers
             return View(rental);
         }
 
+        public async Task<IActionResult> Process(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            
+            var rental = await _context.Rentals
+                .Include(r=> r.ApplicationUser)
+                .Include(r => r.GameCopy)
+                .FirstOrDefaultAsync(r => r.Id == id);
+            if (rental == null)
+            {
+                return NotFound();
+            }
+            ViewData["RentalStatus"] = new SelectList(Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>(), rental.Status);
+            return View(rental);
+        }
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Process(Rental rental)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Update(rental);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(rental);
+        }
         // GET: Admin/Rentals/Create
         public IActionResult Create()
         {
