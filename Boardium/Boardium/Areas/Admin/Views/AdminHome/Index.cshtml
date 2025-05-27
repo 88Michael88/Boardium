@@ -1,0 +1,17 @@
+
+
+@{
+    ViewBag.Title = "Admin Dashboard";
+    Layout = "_Layout";
+}
+<h1>@ViewBag.Title</h1>
+
+<div class="list-group">
+    <a asp-area="Admin" asp-controller="Games" asp-action="Index" class="list-group-item list-group-item-action">
+        📚 Manage Games
+    </a>
+    <a asp-area="Admin" asp-controller="GameCopies" asp-action="Index" class="list-group-item list-group-item-action">
+        🎮 Manage Game Copies
+    </a>
+</div>
+

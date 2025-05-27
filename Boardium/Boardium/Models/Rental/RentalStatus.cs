@@ -7,4 +7,5 @@ public enum RentalStatus
     Overdue,
     Canceled,
     WaitingForPickup,
+    WaitingForAcceptance,
 }

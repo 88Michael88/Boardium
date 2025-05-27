@@ -24,7 +24,16 @@ namespace Boardium.Admin.Controllers
             _context = context;
             _logger = logger;
         }
-
+        [HttpGet]
+        public async Task<IActionResult> Autocomplete(string term)
+        {
+            var results = await _context.Games
+                .Where(g => g.Title.Contains(term))
+                .Select(g => new { id = g.Id, text = g.Title })
+                .Take(10)
+                .ToListAsync();
+            return Json(new {results });
+        }
         // GET: Games
         public async Task<IActionResult> Index()
         {
