@@ -180,7 +180,7 @@ namespace Boardium.Admin.Controllers
             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png" };
             if (vm.UploadedImages?.Any() == true)
             {
-                var gameFolder = Path.Combine("wwwroot", "images", "games", game.Id.ToString());
+                var gameFolder = Path.Combine("wwwroot", "pictures", game.Id.ToString());
                 Directory.CreateDirectory(gameFolder);
                 foreach (var file in vm.UploadedImages)
                 {
@@ -189,6 +189,7 @@ namespace Boardium.Admin.Controllers
                     {
                         continue;
                     }
+                    //TODO gen lowres version
                     var fileName = $"{Guid.NewGuid()}{extension}";
                     var filePath = Path.Combine(gameFolder, fileName).Replace("\\", "/");
                     try
@@ -200,7 +201,7 @@ namespace Boardium.Admin.Controllers
 
                         game.Images.Add(new GameImage
                         {
-                            ImagePath = Path.Combine("images", "games", game.Id.ToString(), fileName).Replace("\\", "/"),
+                            ImagePath = Path.Combine( fileName).Replace("\\", "/"),
                             IsCoverImage = false
                         });
                         

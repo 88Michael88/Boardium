@@ -1,4 +1,12 @@
-﻿<!DOCTYPE html>
+﻿@using Boardium.Models
+@using Boardium.Models.Auth
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject UserManager<ApplicationUser> UserManager
+@{
+    
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8"/>
@@ -26,6 +34,34 @@
                     <li class="nav-item">
                         <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                     </li>
+                    @{
+                        <ul class="navbar-nav ms-auto">
+                            
+                                @if (User.Identity?.IsAuthenticated ?? false)
+                                {
+                                    ApplicationUser? currentUser = await UserManager.GetUserAsync(User);
+                                    <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index">Hello @currentUser?.FirstName!</a>
+                                    </li> 
+                                    <li class="nav-item">
+                                    <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+                                        <button type="submit" class="nav-link fw-bold btn btn-link text-danger">Logout</button>
+                                    </form>
+                                    </li>
+                            }
+                            else
+                            {
+                                <li class="nav-item">
+                                <a asp-area="Identity" asp-page="/Account/Login" class="nav-link text-dark">Log in</a>
+                                </li>
+                                }
+                            
+                        </ul>
+                        
+                        
+                    }
+                    
+                    
                 </ul>
             </div>
         </div>

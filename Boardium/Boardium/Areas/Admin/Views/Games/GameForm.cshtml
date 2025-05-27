@@ -15,6 +15,7 @@
         <label asp-for="UploadedImages">Add photos</label>
         <input type="file" asp-for="UploadedImages" id="UploadedImages" class="form-control" multiple  />
     </div>
+    <p>Choose cover image by clicking on it (newly uploaded photos are only available after save)</p>
     @if (Model.ExistingImagePaths?.Any() == true)
     {
         <div class="mb-3 d-flex flex-wrap gap-2">
@@ -22,7 +23,7 @@
             @foreach (var path in Model.ExistingImagePaths)
             {
                 <div class="image-container position-relative" data-path="@path" style="display: inline-block;">
-                    <img src="@Url.Content("/" + path)"  style="height: 100px; border: 1px solid #ccc; padding: 4px;"/>
+                    <img src="@Url.Content("~/pictures/"+Model.Id.ToString()+"/" + path)"  style="height: 100px; border: 1px solid #ccc; padding: 4px;"/>
                     
                     <button type="button" class="btn-close btn-sm position-absolute top-0 end-0 remove-image-btn" aria-label="Close" title="Usuń" data-path="@path"></button>
                 </div>   
