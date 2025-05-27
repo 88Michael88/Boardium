@@ -28,16 +28,17 @@ namespace Boardium.Controllers {
             Publisher publisher = await _context.Publishers.Where(p => p.Id == game.PublisherId).FirstAsync();
 
             GameAvailableCopy[] gameCopies = await (from gc in _context.GameCopies
-                                                   where !(from r in _context.Rentals
-                                                           where r.ReturnedAt == null
-                                                           select r.GameCopyId).Contains(gc.Id)
-                                                   && gc.GameId == gameIndex
-                                                   select new GameAvailableCopy {
-                                                       Id = gc.Id,
-                                                       Condition = gc.Condition,
-                                                       InventoryNumber = gc.InventoryNumber,
-                                                       RentalFee = gc.RentalFee
-                                                   }
+                                                    join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalsGroup
+                                                    from rental in rentalsGroup.DefaultIfEmpty()
+                                                    where gc.GameId == gameIndex
+                                                    select new GameAvailableCopy {
+                                                        GameCopyID = gc.Id,
+                                                        GameID = gc.GameId,
+                                                        Condition = gc.Condition,
+                                                        InventoryNumber = gc.InventoryNumber,
+                                                        RentalFee = gc.RentalFee,
+                                                        DueDate = rental.DueDate
+                                                    }
                                                    ).ToArrayAsync();
 
             BoardGameViewModel model = new BoardGameViewModel {
