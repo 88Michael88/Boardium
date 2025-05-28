@@ -7,10 +7,12 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Boardium.Data;
 using Boardium.Models.Rental;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Boardium.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin,Employee")]
     public class RentalsController : Controller
     {
         private readonly BoardiumContext _context;

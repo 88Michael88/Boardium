@@ -2,7 +2,7 @@
 
 @{
     ViewBag.Title = "Admin Dashboard";
-    Layout = "_Layout";
+    
 }
 <h1>@ViewBag.Title</h1>
 
@@ -14,6 +14,8 @@
         🎮 Manage Game Copies
     </a><a asp-area="Admin" asp-controller="Rentals" asp-action="Index" class="list-group-item list-group-item-action">
         📝 Manage Rentals
+    </a><a asp-area="Admin" asp-controller="Publishers" asp-action="Index" class="list-group-item list-group-item-action">
+        🏭 Manage Publishers
     </a>
 </div>
 

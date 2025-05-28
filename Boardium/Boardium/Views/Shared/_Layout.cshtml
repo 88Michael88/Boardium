@@ -80,8 +80,12 @@
                 &copy; 2025 - Boardium - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
             </div>
         
+    @if(User.Identity.IsAuthenticated && (User.IsInRole("Admin")|| User.IsInRole("Employee")))
+    {
+            <div class="container text-end"><a asp-area="Admin" asp-controller="AdminHome" asp-action="Index">Managment Dashboard</a></div>
+
+        }
     
-    <div class="container text-end"><a asp-area="Admin" asp-controller="AdminHome" asp-action="Index">Managment Dashboard</a></div>
     </div>
 </footer>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
