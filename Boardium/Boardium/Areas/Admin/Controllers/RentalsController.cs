@@ -15,10 +15,12 @@ namespace Boardium.Areas.Admin.Controllers
     [Authorize(Roles = "Admin,Employee")]
     public class RentalsController : Controller
     {
+        private ILogger<RentalsController> _logger;
         private readonly BoardiumContext _context;
 
-        public RentalsController(BoardiumContext context)
+        public RentalsController(BoardiumContext context, ILogger<RentalsController> logger)
         {
+            _logger = logger;
             _context = context;
         }
 
@@ -49,6 +51,25 @@ namespace Boardium.Areas.Admin.Controllers
             return View(rental);
         }
 
+        public async Task<IActionResult> Pickup(int? pickupCode)
+        {
+            if (pickupCode == null)
+            {
+                _logger.Log(LogLevel.Error, "Pickup code is null");
+                return View(pickupCode);
+            }
+            var rentalId = await _context.Rentals
+                .Where(r => r.PickupCode == pickupCode)
+                .Select(r => (int?)r.Id)
+                .FirstOrDefaultAsync();
+            Console.WriteLine(rentalId);
+            if (rentalId != null)
+            {
+                return RedirectToAction(nameof(Process), new { id = rentalId });
+            }
+            ViewBag.Error = "Nie znaleziono wypożyczenia dla podanego kodu.";
+            return View(pickupCode);
+        }
         public async Task<IActionResult> Process(int? id)
         {
             if (id == null)
