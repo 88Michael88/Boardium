@@ -1,0 +1,37 @@
+
+
+@{
+    ViewBag.Title = "Admin Dashboard";
+    
+}
+<h1>@ViewBag.Title</h1>
+
+<div class="list-group mb-4">
+    <h5 class="list-group-item active bg-dark border-dark text-white">
+        🎮 Game Management
+    </h5>
+    <a asp-area="Admin" asp-controller="Games" asp-action="Index" class="list-group-item list-group-item-action">
+        📚 Manage Games
+    </a>
+    <a asp-area="Admin" asp-controller="GameCopies" asp-action="Index" class="list-group-item list-group-item-action">
+        🎮 Manage Game Copies
+    </a>
+    <a asp-area="Admin" asp-controller="Rentals" asp-action="Index" class="list-group-item list-group-item-action">
+        📝 Manage Rentals
+    </a>
+    <a asp-area="Admin" asp-controller="Publishers" asp-action="Index" class="list-group-item list-group-item-action">
+        🏭 Manage Publishers
+    </a>
+</div>
+
+<div class="list-group">
+    <h5 class="list-group-item active bg-primary border-primary text-white">
+        👥 Customer Operations
+    </h5>
+    <a asp-controller="Rentals" asp-action="Pickup" class="list-group-item list-group-item-action">
+        📦 Pickup Rental
+    </a>
+    <a asp-controller="Rentals" asp-action="Process" class="list-group-item list-group-item-action">
+        🔄 Process Rental
+    </a>
+</div>
