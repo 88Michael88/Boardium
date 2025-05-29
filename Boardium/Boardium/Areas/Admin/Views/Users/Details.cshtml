@@ -1,0 +1,30 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Boardium.Models.Auth.ApplicationUser
+@{
+    ViewData["Title"] = "Szczegóły użytkownika";
+}
+
+<h1 class="mb-4">Szczegóły użytkownika</h1>
+
+<div class="card p-4">
+    <dl class="row">
+        <dt class="col-sm-3">Email</dt>
+        <dd class="col-sm-9">@Model.Email</dd>
+
+        <dt class="col-sm-3">First Name</dt>
+        <dd class="col-sm-9">@Model.FirstName</dd>
+
+        <dt class="col-sm-3">Last Name</dt>
+        <dd class="col-sm-9">@Model.LastName</dd>
+
+        <dt class="col-sm-3">Address</dt>
+        <dd class="col-sm-9">@Model.AddressLine</dd>
+
+        <dt class="col-sm-3">City</dt>
+        <dd class="col-sm-9">@Model.City</dd>
+
+        <dt class="col-sm-3">Postal Code</dt>
+        <dd class="col-sm-9">@Model.PostalCode</dd>
+    </dl>
+    <a asp-action="Index" class="btn btn-secondary">Back</a>
+</div>

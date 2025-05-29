@@ -1,3 +1,4 @@
+using Boardium.Areas.Admin.Mappers;
 using Boardium.Data;
 using Boardium.Models.Auth;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +11,7 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<BoardiumContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DevelopmentConnection")));
 builder.Services.AddScoped<SeedData>();
+builder.Services.AddScoped<UserMapper>();
 builder.Services.AddAuthentication();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     {
