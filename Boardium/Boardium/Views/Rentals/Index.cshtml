@@ -7,7 +7,7 @@
     <div class="row">
         <!-- Image Section -->
         <div class="col-md-3">
-            <img src="@Url.Content(Model.PathToImage)" class="img-thumbnail" style="width: 250px; height: 250px;" alt="Game image" />
+            <img src="@Url.Content($"~/pictures/{Model.GameID}/lowres/{Model.PathToImage}")" class="img-thumbnail" style="width: 250px; height: 250px;" alt="Game image" />
         </div>
 
         <!-- Game Info Section -->
@@ -19,7 +19,7 @@
                 <tr><th>Condition:</th><td>@Model.Condition</td></tr>
                 <tr><th>Inventory Number:</th><td>@Model.InventoryNumber</td></tr>
                 <tr><th>Rental Fee:</th><td>@Model.RentalFee.ToString("C")</td></tr>
-                <tr><th>Due Date:</th><td>@(Model.DueDate?.ToString("yyyy-MM-dd") ?? "Available Now")</td></tr>
+                <tr><th>@(Model.DueDate != null ? "Will Be Available After" : "Status")</th><td>@(Model.DueDate?.ToString("yyyy-MM-dd") ?? "Available Now")</td></tr>
             </table>
         </div>
     </div>
@@ -52,6 +52,11 @@
     {
         <p class="text-muted">No future reservations.</p>
     }
+    <!-- Desired Borrow Date Input -->
+    <div class="form-group mt-4">
+        <label for="desiredDueDate" class="form-label">Select your desired borrow date:</label>
+        <input type="date" class="form-control" id="borrowDueDate" name="borrowDueDate" />
+    </div>
 
     <!-- Desired Return Date Input -->
     <div class="form-group mt-4">

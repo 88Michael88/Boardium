@@ -67,7 +67,7 @@
                     </thead>
                     <tbody>
                         @foreach (var copy in Model.GameCopies) {
-                            <tr onclick="location.href='@Url.Action("Index", "Rentals", new { GameID = copy.GameID, GameCopy = copy.GameCopyID })'" style="cursor:pointer;">
+                            <tr onclick="location.href='@Url.Action("Index", "Rentals", new { GameID = copy.GameID, GameCopyID = copy.GameCopyID })'" style="cursor:pointer;">
                                 <td>@copy.InventoryNumber</td>
                                 <td>@copy.Condition</td>
                                 <td>@copy.RentalFee.ToString("C")</td>

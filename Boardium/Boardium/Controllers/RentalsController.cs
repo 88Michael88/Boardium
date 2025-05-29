@@ -21,7 +21,7 @@ namespace Boardium.Controllers {
                        join g in _context.Games on gc.GameId equals g.Id
                        join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalGroup
                        from rental in rentalGroup.DefaultIfEmpty() // LEFT JOIN
-                       where gc.GameId == 1 && gc.Id == 1
+                       where gc.GameId == GameID && gc.Id == GameCopyID 
                        select new GameAvailableCopyDetailsViewModel {
                                                                      GameCopyID = gc.Id,
                                                                        GameID = gc.GameId,
@@ -33,27 +33,9 @@ namespace Boardium.Controllers {
                                                                        LateFee = 0.0m,
                                                                        DamageFee = 0.0m,
                                                                        FutureBorrows = new List<BorrowInfo>(),
-                                                                       PathToImage = "" 
+                                                                       PathToImage = "Catan_Example_Game.jpg" 
                        }).FirstOrDefaultAsync();
-            // await (from gc in _context.GameCopies
-            //                                                       join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalsGroup
-            //                                                       from rental in rentalsGroup.DefaultIfEmpty()
-            //                                                       join g in _context.Games on gc.GameId equals g.Id 
-            //                                                       where gc.GameId == GameID && gc.Id == GameCopyID
-            //                                                       select new GameAvailableCopyDetailsViewModel {
-            //                                                           GameCopyID = gc.Id,
-            //                                                           GameID = gc.GameId,
-            //                                                           Title = g.Title,
-            //                                                           Condition = gc.Condition,
-            //                                                           InventoryNumber = gc.InventoryNumber,
-            //                                                           RentalFee = gc.RentalFee,
-            //                                                           DueDate = rental.DueDate,
-            //                                                           LateFee = 0.0m,
-            //                                                           DamageFee = 0.0m,
-            //                                                           FutureBorrows = null,
-            //                                                           PathToImage = "" 
-            //                                                       }
-            //                                                      ).FirstOrDefaultAsync();
+
             if (gameCopyDetail == null)
                 return NotFound();
 

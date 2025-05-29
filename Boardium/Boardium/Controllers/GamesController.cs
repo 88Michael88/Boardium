@@ -60,7 +60,7 @@ namespace Boardium.Controllers {
         }
 
         public async Task<IActionResult> Index(int? page) {
-            int pageSize = 2;
+            int pageSize = 10;
             int currentPage = page ?? 1;
 
             List<BoardGame> boardGames = await (from g in _context.Games
