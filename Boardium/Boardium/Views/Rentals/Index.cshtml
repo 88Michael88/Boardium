@@ -14,12 +14,10 @@
         <div class="col-md-9">
             <h2>@Model.Title</h2>
             <table class="table table-borderless">
-                <tr><th>GameCopyID:</th><td>@Model.GameCopyID</td></tr>
-                <tr><th>GameID:</th><td>@Model.GameID</td></tr>
                 <tr><th>Condition:</th><td>@Model.Condition</td></tr>
                 <tr><th>Inventory Number:</th><td>@Model.InventoryNumber</td></tr>
                 <tr><th>Rental Fee:</th><td>@Model.RentalFee.ToString("C")</td></tr>
-                <tr><th>@(Model.DueDate != null ? "Will Be Available After" : "Status")</th><td>@(Model.DueDate?.ToString("yyyy-MM-dd") ?? "Available Now")</td></tr>
+                <tr><th>@(Model.DueDate != null ? "Will Be Available After" : "Status")</th><td>@(Model.DueDate?.ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
             </table>
         </div>
     </div>
@@ -41,8 +39,8 @@
                 @foreach (var borrow in Model.FutureBorrows)
                 {
                     <tr>
-                        <td>@borrow.RentDate.ToString("yyyy-MM-dd")</td>
-                        <td>@borrow.DueDate.ToString("yyyy-MM-dd")</td>
+                        <td>@borrow.RentDate.ToString("dd MMMM yyyy")</td>
+                        <td>@borrow.DueDate.ToString("dd MMMM yyyy")</td>
                     </tr>
                 }
             </tbody>
@@ -54,23 +52,49 @@
     }
     <!-- Desired Borrow Date Input -->
     <div class="form-group mt-4">
-        <label for="desiredDueDate" class="form-label">Select your desired borrow date:</label>
-        <input type="date" class="form-control" id="borrowDueDate" name="borrowDueDate" />
+        <label for="borrowDueDate" class="form-label">Select your desired borrow date:</label>
+        <input type="date" class="form-control" id="borrowDueDate" name="borrowDueDate" required />
     </div>
 
     <!-- Desired Return Date Input -->
     <div class="form-group mt-4">
         <label for="desiredDueDate" class="form-label">Select your desired return date:</label>
-        <input type="date" class="form-control" id="desiredDueDate" name="desiredDueDate" />
+        <input type="date" class="form-control" id="desiredDueDate" name="desiredDueDate" required />
     </div>
 
-    <!-- Rent Button -->
+    <!-- Rent Button Form -->
     <form asp-controller="Rentals" asp-action="Confirm" method="post" class="mt-4">
         <input type="hidden" name="GameCopyID" value="@Model.GameCopyID" />
         <input type="hidden" name="DesiredDueDate" id="hiddenDueDate" />
+        <input type="hidden" name="DesiredBorrowDate" id="hiddenBorrowDate" />
 
-        <button type="submit" class="btn btn-danger btn-lg w-100" onclick="document.getElementById('hiddenDueDate').value = document.getElementById('desiredDueDate').value">
+        <button id="rentButton" type="submit" class="btn btn-danger btn-lg w-100" disabled>
             Rent Board Game
         </button>
     </form>
+
+	<script>
+		const borrowDateInput = document.getElementById("borrowDueDate");
+		const returnDateInput = document.getElementById("desiredDueDate");
+		const rentButton = document.getElementById("rentButton");
+		const hiddenDueDate = document.getElementById("hiddenDueDate");
+		const hiddenBorrowDate = document.getElementById("hiddenBorrowDate");
+
+		function validateDates() {
+			const borrowDate = new Date(borrowDateInput.value);
+			const returnDate = new Date(returnDateInput.value);
+
+			const validDates = borrowDateInput.value && returnDateInput.value && returnDate > borrowDate;
+
+			// Set hidden values only if valid
+			hiddenBorrowDate.value = borrowDateInput.value;
+			hiddenDueDate.value = returnDateInput.value;
+
+			// Enable button only if both dates are filled and return is after borrow
+			rentButton.disabled = !validDates;
+		}
+
+		borrowDateInput.addEventListener("input", validateDates);
+		returnDateInput.addEventListener("input", validateDates);
+	</script>
 </div>

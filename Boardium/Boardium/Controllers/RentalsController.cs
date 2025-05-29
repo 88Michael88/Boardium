@@ -41,5 +41,10 @@ namespace Boardium.Controllers {
 
             return View(gameCopyDetail);
         }
+
+        [Authorize(Roles = "Admin,Employee,User")]
+        public IActionResult Confirm() {
+            return View();
+        }
     }
 }
