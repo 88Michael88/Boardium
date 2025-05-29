@@ -68,13 +68,7 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <label asp-for="Status" class="form-label"></label>
-                        <select asp-for="Status" class="form-select">
-                            @foreach (var statusName in Enum.GetNames(typeof(RentalStatus)))
-                            {
-                                var statusValue = (int)Enum.Parse(typeof(RentalStatus), statusName);
-                                <option value="@statusValue" @(Model.Status == (RentalStatus)statusValue ? "selected" : "")>@statusName</option>
-                            }
-                        </select>
+                        <select asp-for="Status" class="form-select" asp-items="Html.GetEnumSelectList<Boardium.Models.Rental.RentalStatus>()"></select>
                         <span asp-validation-for="Status" class="text-danger"></span>
                     </div>
 
