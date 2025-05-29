@@ -9,6 +9,8 @@ using Microsoft.EntityFrameworkCore;
 using Boardium.Data;
 using Boardium.Models.Game;
 using Microsoft.AspNetCore.Authorization;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Processing;
 
 namespace Boardium.Admin.Controllers
 {
@@ -24,6 +26,7 @@ namespace Boardium.Admin.Controllers
             _context = context;
             _logger = logger;
         }
+
         [HttpGet]
         public async Task<IActionResult> Autocomplete(string term)
         {
@@ -32,8 +35,9 @@ namespace Boardium.Admin.Controllers
                 .Select(g => new { id = g.Id, text = g.Title })
                 .Take(10)
                 .ToListAsync();
-            return Json(new {results });
+            return Json(new { results });
         }
+
         // GET: Games
         public async Task<IActionResult> Index()
         {
@@ -79,9 +83,9 @@ namespace Boardium.Admin.Controllers
                     .ToListAsync(),
                 ExistingImagePaths = new List<string>()
             };
-            return View("GameForm",vm);
+            return View("GameForm", vm);
         }
-        
+
 
         // GET: Games/Edit/5
         [Authorize(Roles = "Admin,Employee")]
@@ -95,7 +99,7 @@ namespace Boardium.Admin.Controllers
 
             var game = await _context.Games
                 .Include(g => g.Categories).Include(g => g.Images).FirstOrDefaultAsync(g => g.Id == id);
-                
+
             if (game == null)
             {
                 return NotFound();
@@ -127,47 +131,72 @@ namespace Boardium.Admin.Controllers
                         Text = p.Name
                     })
                     .ToListAsync(),
-                ExistingImagePaths = game.Images.Select(i => i.ImagePath).ToList()?? new(),
-                //CoverImagePath = game.Images.FirstOrDefault(i => i.IsCoverImage)?.ImagePath
-
+                ExistingImagePaths = game.Images.Select(i => i.ImagePath).ToList() ?? new(),
+                CoverImagePath = game.Images.FirstOrDefault(i => i.IsCoverImage)?.ImagePath
             };
-
             return View("GameForm", vm);
         }
 
-     
-    
+
         [HttpPost]
         public async Task<IActionResult> Save(GameFormViewModel vm)
         {
             if (!ModelState.IsValid)
             {
-                vm.AllCategories = await _context.GameCategories.Select(gc => new SelectListItem
+                await PopulateFormViewData(vm);
+                return View("GameForm");
+            }
+
+            var game = await GetOrCreateGameAsync(vm.Id);
+
+            UpdateGameData(game, vm);
+
+            await UpdateGameCategoriesAsync(game, vm.SelectedCategoryIds);
+            await _context.SaveChangesAsync();
+
+            await SaveUploadedImagesAsync(game, vm.UploadedImages);
+            await DeleteImagesAsync(game, vm.DeletedImagePaths);
+            UpdateCoverImage(game, vm.CoverImagePath);
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        private async Task PopulateFormViewData(GameFormViewModel vm)
+        {
+            vm.AllCategories = await _context.GameCategories
+                .Select(gc => new SelectListItem
                 {
                     Value = gc.Id.ToString(),
                     Text = gc.Name,
                 }).ToListAsync();
-                vm.PublisherList = await _context.Publishers
-                    .Select(p => new SelectListItem
-                    {
-                        Value = p.Id.ToString(),
-                        Text = p.Name
-                    })
-                    .ToListAsync();
-                
-                return View("GameForm");
-            }
-            
+
+            vm.PublisherList = await _context.Publishers
+                .Select(p => new SelectListItem
+                {
+                    Value = p.Id.ToString(),
+                    Text = p.Name
+                }).ToListAsync();
+        }
+
+        private async Task<Game> GetOrCreateGameAsync(int gameId)
+        {
             var game = await _context.Games
                 .Include(g => g.Categories)
-                .Include(g=> g.Images)
-                .FirstOrDefaultAsync(g => g.Id == vm.Id);
+                .Include(g => g.Images)
+                .FirstOrDefaultAsync(g => g.Id == gameId);
 
             if (game == null)
             {
                 game = new Game();
                 _context.Games.Add(game);
             }
+
+            return game;
+        }
+
+        private void UpdateGameData(Game game, GameFormViewModel vm)
+        {
             game.Title = vm.Title;
             game.PublisherId = vm.PublisherId;
             game.MinPlayers = vm.MinPlayers;
@@ -176,77 +205,108 @@ namespace Boardium.Admin.Controllers
             game.MaxAge = vm.MaxAge;
             game.PlayingTimeMinutes = vm.PlayingTimeMinutes;
             game.Description = vm.Description;
+        }
+
+        private async Task UpdateGameCategoriesAsync(Game game, List<int>? selectedCategoryIds)
+        {
             game.Categories.Clear();
-            foreach (var catId in vm.SelectedCategoryIds ?? new List<int>())
+            foreach (var catId in selectedCategoryIds ?? new List<int>())
             {
                 var cat = await _context.GameCategories.FindAsync(catId);
                 if (cat != null)
                 {
-                    game.Categories.Add(cat);    
+                    game.Categories.Add(cat);
+                }
+            }
+        }
+
+        
+
+        public async Task GenerateThumbnailAsync(string originalPath, string thumbnailPath, int width = 250)
+        {
+            using var image = await Image.LoadAsync(originalPath);
+            image.Mutate(x => x.Resize(new ResizeOptions
+            {
+                Mode = ResizeMode.Max,
+                Size = new Size(width, 0)
+            }));
+            await image.SaveAsync(thumbnailPath);
+        }
+        private async Task SaveUploadedImagesAsync(Game game, IEnumerable<IFormFile>? uploadedImages)
+        {
+            var formFiles = uploadedImages.ToList();
+            if (formFiles?.Any() != true) return;
+
+            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".webp" };
+            var gameFolder = Path.Combine("wwwroot", "pictures", game.Id.ToString());
+            var lowResFolder = Path.Combine(gameFolder, "lowres");
+            Directory.CreateDirectory(gameFolder);
+            Directory.CreateDirectory(lowResFolder);
+
+            foreach (var file in formFiles)
+            {
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!allowedExtensions.Contains(extension)) continue;
+
+                var fileName = $"{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(gameFolder, fileName).Replace("\\", "/");
+                var thumbnailPath  = Path.Combine(lowResFolder, fileName).Replace("\\", "/");
+                try
+                {
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+                    await GenerateThumbnailAsync(filePath, thumbnailPath);
+                    game.Images.Add(new GameImage
+                    {
+                        ImagePath = fileName,
+                        IsCoverImage = false
+                    });
+                }
+                catch (Exception ex)
+                {
+                    _logger.Log(LogLevel.Error, ex, "Error writing image to images folder");
                 }
                 
             }
-           
-            await _context.SaveChangesAsync();
-             var allowedExtensions = new[] { ".jpg", ".jpeg", ".png",".webp" };
-            if (vm.UploadedImages?.Any() == true)
-            {
-                var gameFolder = Path.Combine("wwwroot", "pictures", game.Id.ToString());
-                Directory.CreateDirectory(gameFolder);
-                foreach (var file in vm.UploadedImages)
-                {
-                    var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-                    if (!allowedExtensions.Contains(extension))
-                    {
-                        continue;
-                    }
-                    //TODO gen lowres version
-                    var fileName = $"{Guid.NewGuid()}{extension}";
-                    var filePath = Path.Combine(gameFolder, fileName).Replace("\\", "/");
-                    try
-                    {
-                        using (var stream = new FileStream(filePath, FileMode.Create))
-                        {
-                            await file.CopyToAsync(stream);
-                        }
+        }
 
-                        game.Images.Add(new GameImage
-                        {
-                            ImagePath = Path.Combine( fileName).Replace("\\", "/"),
-                            IsCoverImage = false
-                        });
-                        
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Log(LogLevel.Error, ex, "Error writing image to images folder");
-                    }
-                    
-                }
-            }
-                _logger.Log(LogLevel.Information, $"Deleting images from images folder Count {vm.DeletedImagePaths?.Count}");
-            if (vm.DeletedImagePaths?.Any() == true)
+        private async Task DeleteImagesAsync(Game game, IEnumerable<string>? imagePaths)
+        {
+            var enumerable = imagePaths.ToList();
+            if (enumerable?.Any() != true) return;
+
+            foreach (var imagePath in enumerable)
             {
-                foreach (var imagePath in vm.DeletedImagePaths)
+                _logger.Log(LogLevel.Information, "Deleting image: {imagePath}", imagePath);
+                var image = game.Images.FirstOrDefault(i => i.ImagePath == imagePath);
+                if (image != null)
                 {
-                    _logger.Log(LogLevel.Information, "Deleting image: {imagePath}", imagePath);
-                    var image = game.Images.FirstOrDefault(i => i.ImagePath == imagePath);
-                    if (image != null)
+                    game.Images.Remove(image);
+                    _context.GameImages.Remove(image);
+
+                    var fullPath = Path.Combine("wwwroot", "pictures", game.Id.ToString(), imagePath);
+                    if (System.IO.File.Exists(fullPath))
                     {
-                        game.Images.Remove(image);
-                        _context.GameImages.Remove(image);
-                        var fullPath = Path.Combine("wwwroot", imagePath);
-                        if (System.IO.File.Exists(fullPath))
-                        {
-                            System.IO.File.Delete(fullPath);
-                        }
+                        System.IO.File.Delete(fullPath);
                     }
                 }
             }
-            
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+        }
 
+        private void UpdateCoverImage(Game game, string? coverImagePath)
+        {
+            foreach (var img in game.Images)
+            {
+                img.IsCoverImage = false;
+            }
+
+            var coverImage = game.Images.FirstOrDefault(i => i.ImagePath == coverImagePath);
+            if (coverImage != null)
+            {
+                coverImage.IsCoverImage = true;
+            }
         }
 
         // GET: Games/Delete/5

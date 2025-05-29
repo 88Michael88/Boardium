@@ -5,7 +5,7 @@ namespace Boardium.Areas.Admin.Models;
 
 public class GameFormViewModel
 {
-    public int? Id {get; set;}
+    public int Id {get; set;}
     [Required]
     public string Title {get; set;}
     public string? Description { get; set; }
@@ -27,6 +27,7 @@ public class GameFormViewModel
     public List<IFormFile> UploadedImages { get; set; } = new();
     public List<string> ExistingImagePaths { get; set; } = new();
     public List<string> DeletedImagePaths { get; set; } = new();
-    //public string? CoverImagePath { get; set; }
+    public string? CoverImagePath { get; set; }
+    
     public string FormTitle => Id == null ? "Create Game" : "Edit Game";
 }

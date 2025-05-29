@@ -25,6 +25,7 @@
       </PackageReference>
       <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration" Version="9.0.0" />
       <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" />
       <PackageReference Include="SkiaSharp" Version="3.119.0" />
       <PackageReference Include="ZXing.Net" Version="0.16.10" />
       <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.21" />
@@ -48,6 +49,7 @@
 
     <ItemGroup>
       <Folder Include="wwwroot\pictures\2\" />
+      <Folder Include="wwwroot\pictures\4\" />
     </ItemGroup>
 
 </Project>
