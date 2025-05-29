@@ -60,7 +60,7 @@ namespace Boardium.Controllers {
         }
 
         public async Task<IActionResult> Index(int? page) {
-            int pageSize = 10;
+            int pageSize = 2;
             int currentPage = page ?? 1;
 
             List<BoardGame> boardGames = await (from g in _context.Games
@@ -73,7 +73,10 @@ namespace Boardium.Controllers {
                                                    Description = g.Description,
                                                    PathToImage = gi.ImagePath,
                                                    Publisher = p.Name
-                                               }).ToListAsync();
+                                               })
+                                               .Skip((currentPage - 1) * pageSize)
+                                               .Take(pageSize)
+                                               .ToListAsync();
 
             int totalGames = await _context.Games
                                            .CountAsync();
