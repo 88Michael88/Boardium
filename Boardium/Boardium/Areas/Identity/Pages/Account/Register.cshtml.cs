@@ -98,6 +98,28 @@ namespace Boardium.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+            [Required]
+            [MaxLength(64)]
+            [Display(Name = "First Name")]
+            public string FirstName { get; set; }
+
+            [Required]
+            [MaxLength(64)]
+            [Display(Name = "Last Name")]
+            public string LastName { get; set; }
+
+            [MaxLength(64)]
+            [Display(Name = "Address Line")]
+            public string AddressLine { get; set; }
+
+            [MaxLength(32)]
+            [Display(Name = "City")]
+            public string City { get; set; }
+
+            [MaxLength(16)]
+            [Display(Name = "Postal Code")]
+            public string PostalCode { get; set; }
+
         }
 
 
@@ -114,15 +136,20 @@ namespace Boardium.Areas.Identity.Pages.Account
             if (ModelState.IsValid)
             {
                 var user = CreateUser();
-
+                user.FirstName = Input.FirstName;
+                user.LastName = Input.LastName;
+                user.AddressLine = Input.AddressLine;
+                user.City = Input.City;
+                user.PostalCode = Input.PostalCode;
+                
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
                 var result = await _userManager.CreateAsync(user, Input.Password);
-
+                
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
-
+                    await _userManager.AddToRoleAsync(user, "User");
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
                     code = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(code));
