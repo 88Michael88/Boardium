@@ -18,9 +18,11 @@ namespace Boardium.Models {
     }
 
     public class GameAvailableCopy {
-        public int Id { get; set; }
+        public int GameCopyID { get; set; }
+        public int GameID { get; set; }
         public string InventoryNumber { get; set; }
         public GameCondition Condition { get; set; }
         public decimal RentalFee { get; set; }
+        public DateTime? DueDate { get; set; } 
     }
 }

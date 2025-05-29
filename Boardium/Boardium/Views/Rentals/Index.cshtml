@@ -1,6 +1,71 @@
-﻿@{
-    ViewData["Title"] = "Index";
+﻿@model Boardium.Models.GameAvailableCopyDetailsViewModel;
+@{
+    ViewData["Title"] = "Rent Board Game";
 }
 
-<h1>Index</h1>
+<div class="container mt-5">
+    <div class="row">
+        <!-- Image Section -->
+        <div class="col-md-3">
+            <img src="@Url.Content(Model.PathToImage)" class="img-thumbnail" style="width: 250px; height: 250px;" alt="Game image" />
+        </div>
 
+        <!-- Game Info Section -->
+        <div class="col-md-9">
+            <h2>@Model.Title</h2>
+            <table class="table table-borderless">
+                <tr><th>GameCopyID:</th><td>@Model.GameCopyID</td></tr>
+                <tr><th>GameID:</th><td>@Model.GameID</td></tr>
+                <tr><th>Condition:</th><td>@Model.Condition</td></tr>
+                <tr><th>Inventory Number:</th><td>@Model.InventoryNumber</td></tr>
+                <tr><th>Rental Fee:</th><td>@Model.RentalFee.ToString("C")</td></tr>
+                <tr><th>Due Date:</th><td>@(Model.DueDate?.ToString("yyyy-MM-dd") ?? "Available Now")</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <hr />
+
+    <!-- Future Borrows Table -->
+    <h4>Future Reservations</h4>
+    @if (Model.FutureBorrows.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Rent Date</th>
+                    <th>Due Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var borrow in Model.FutureBorrows)
+                {
+                    <tr>
+                        <td>@borrow.RentDate.ToString("yyyy-MM-dd")</td>
+                        <td>@borrow.DueDate.ToString("yyyy-MM-dd")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted">No future reservations.</p>
+    }
+
+    <!-- Desired Return Date Input -->
+    <div class="form-group mt-4">
+        <label for="desiredDueDate" class="form-label">Select your desired return date:</label>
+        <input type="date" class="form-control" id="desiredDueDate" name="desiredDueDate" />
+    </div>
+
+    <!-- Rent Button -->
+    <form asp-controller="Rentals" asp-action="Confirm" method="post" class="mt-4">
+        <input type="hidden" name="GameCopyID" value="@Model.GameCopyID" />
+        <input type="hidden" name="DesiredDueDate" id="hiddenDueDate" />
+
+        <button type="submit" class="btn btn-danger btn-lg w-100" onclick="document.getElementById('hiddenDueDate').value = document.getElementById('desiredDueDate').value">
+            Rent Board Game
+        </button>
+    </form>
+</div>
