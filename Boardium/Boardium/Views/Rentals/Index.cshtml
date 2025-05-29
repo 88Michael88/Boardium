@@ -64,6 +64,7 @@
 
     <!-- Rent Button Form -->
     <form asp-controller="Rentals" asp-action="Confirm" method="post" class="mt-4">
+        <input type="hidden" name="GameID" value="@Model.GameID" />
         <input type="hidden" name="GameCopyID" value="@Model.GameCopyID" />
         <input type="hidden" name="DesiredDueDate" id="hiddenDueDate" />
         <input type="hidden" name="DesiredBorrowDate" id="hiddenBorrowDate" />
@@ -86,11 +87,9 @@
 
 			const validDates = borrowDateInput.value && returnDateInput.value && returnDate > borrowDate;
 
-			// Set hidden values only if valid
 			hiddenBorrowDate.value = borrowDateInput.value;
 			hiddenDueDate.value = returnDateInput.value;
 
-			// Enable button only if both dates are filled and return is after borrow
 			rentButton.disabled = !validDates;
 		}
 
