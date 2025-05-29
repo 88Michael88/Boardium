@@ -4,98 +4,117 @@
 
 @{
     ViewData["Title"] = "Process Rental";
-    var user = Model.ApplicationUser;
 }
-<h1>Process Order</h1>
 
-<hr/>
+<h1 class="mb-4">Process Rental</h1>
 
-        <form asp-action="Process">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="Id"/>
-            <div class="row">
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label class="form-label">Customer</label>
-                    <p class="form-control-plaintext">
-                        @user.FirstName @user.LastName (<a href="mailto:@user.Email">@user.Email</a>)
-                    </p>
+<form asp-action="Process">
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="row">
+        <!-- Left Column -->
+        <div class="col-md-6">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    📦 Rental Info
                 </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Customer</label>
+                        <p class="form-control-plaintext">
+                            @Model.ApplicationUser.FirstName @Model.ApplicationUser.LastName
+                            (<a href="mailto:@Model.ApplicationUser.Email">@Model.ApplicationUser.Email</a>)
+                        </p>
+                    </div>
 
-                <div class="mb-3">
-                    <label asp-for="PickupCode" class="form-label"></label>
-                    <p class="form-control-plaintext">@Model.PickupCode</p>
-                </div>
-                <div class="mb-3">
-                    <label asp-for="RentedAt" class="form-label"></label>
-                    <input asp-for="RentedAt" type="datetime-local" class="form-control"/>
-                </div>
+                    <div class="mb-3">
+                        <label class="form-label">Game</label>
+                        <p class="form-control-plaintext">
+                            🎮 @Model.GameCopy?.Game?.Title<br />
+                            <small class="text-muted">Inventory #: @Model.GameCopy?.InventoryNumber</small>
+                        </p>
+                    </div>
 
-                <div class="mb-3">
-                    <label asp-for="DueDate" class="form-label"></label>
-                    <input asp-for="DueDate" type="datetime-local" class="form-control"/>
-                </div>
+                    <div class="mb-3">
+                        <label asp-for="PickupCode" class="form-label"></label>
+                        <p class="form-control-plaintext">@Model.PickupCode</p>
+                    </div>
 
-                <div class="mb-3">
-                    <label asp-for="ReturnedAt" class="form-label"></label>
-                    <input asp-for="ReturnedAt" type="datetime-local" class="form-control"/>
+                    <div class="mb-3">
+                        <label asp-for="RentedAt" class="form-label"></label>
+                        <input asp-for="RentedAt" type="datetime-local" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DueDate" class="form-label"></label>
+                        <input asp-for="DueDate" type="datetime-local" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="ReturnedAt" class="form-label"></label>
+                        <input asp-for="ReturnedAt" type="datetime-local" class="form-control" />
+                    </div>
                 </div>
             </div>
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label asp-for="Status" class="form-label"></label>
-                    <input type="range" min="0" max="@(Enum.GetValues(typeof(RentalStatus)).Length - 1)"
-                           value="@Model.Status"
-                           class="form-range" id="statusSlider" name="Status"/>
-                    <div><strong id="statusLabel">@Model.Status</strong></div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-md-6">
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-secondary text-white">
+                    💵 Processing Details
                 </div>
-                <div class="form-group">
-                    <label asp-for="Notes" class="control-label"></label>
-                    <input asp-for="Notes" class="form-control"/>
-                    <span asp-validation-for="Notes" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="RentalFee" class="control-label"></label>
-                    <input asp-for="RentalFee" class="form-control"/>
-                    <span asp-validation-for="RentalFee" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="LateFee" class="control-label"></label>
-                    <input asp-for="LateFee" class="form-control"/>
-                    <span asp-validation-for="LateFee" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="DamageFee" class="control-label"></label>
-                    <input asp-for="DamageFee" class="form-control"/>
-                    <span asp-validation-for="DamageFee" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="PaidFee" class="control-label"></label>
-                    <input asp-for="PaidFee" class="form-control"/>
-                    <span asp-validation-for="PaidFee" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <input type="submit" value="Save" class="btn btn-primary"/>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label asp-for="Status" class="form-label"></label>
+                        <select asp-for="Status" class="form-select">
+                            @foreach (var statusName in Enum.GetNames(typeof(RentalStatus)))
+                            {
+                                var statusValue = (int)Enum.Parse(typeof(RentalStatus), statusName);
+                                <option value="@statusValue" @(Model.Status == (RentalStatus)statusValue ? "selected" : "")>@statusName</option>
+                            }
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger"></span>
+                    </div>
+
+
+                    <div class="mb-3">
+                        <label asp-for="Notes" class="form-label"></label>
+                        <textarea asp-for="Notes" class="form-control" rows="2"></textarea>
+                        <span asp-validation-for="Notes" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="RentalFee" class="form-label"></label>
+                        <input asp-for="RentalFee" class="form-control" />
+                        <span asp-validation-for="RentalFee" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LateFee" class="form-label"></label>
+                        <input asp-for="LateFee" class="form-control" />
+                        <span asp-validation-for="LateFee" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DamageFee" class="form-label"></label>
+                        <input asp-for="DamageFee" class="form-control" />
+                        <span asp-validation-for="DamageFee" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PaidFee" class="form-label"></label>
+                        <input asp-for="PaidFee" class="form-control" />
+                        <span asp-validation-for="PaidFee" class="text-danger"></span>
+                    </div>
+
+                    <div class="text-end">
+                        <input type="submit" value="Save" class="btn btn-success" />
+                        <a asp-action="Index" class="btn btn-secondary ms-2">Cancel</a>
+                    </div>
                 </div>
             </div>
-            </div>
-        </form>
-   
-
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    <script>
-        const statusSlider = document.getElementById('statusSlider');
-        const statusLabel = document.getElementById('statusLabel');
-
-        const statusLabels = @Html.Raw(Json.Serialize(Enum.GetNames(typeof(Boardium.Models.Rental.RentalStatus))));
-
-        statusSlider.addEventListener('input', () => {
-            statusLabel.textContent = statusLabels[statusSlider.value];
-        });
-    </script>
-}
+        </div>
+    </div>
+</form>

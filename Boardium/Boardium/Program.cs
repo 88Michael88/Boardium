@@ -12,6 +12,7 @@ builder.Services.AddDbContext<BoardiumContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DevelopmentConnection")));
 builder.Services.AddScoped<SeedData>();
 builder.Services.AddScoped<UserMapper>();
+builder.Services.AddScoped<RentalMapper>();
 builder.Services.AddAuthentication();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     {

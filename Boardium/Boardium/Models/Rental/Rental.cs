@@ -9,10 +9,10 @@ public class Rental
 {
    public int Id { get; set; }
    public int GameCopyId { get; set; }
-   public GameCopy GameCopy { get; set; }
+   public GameCopy? GameCopy { get; set; }
    [Required]
    public string ApplicationUserId { get; set; }
-   public ApplicationUser ApplicationUser { get; set; }
+   public ApplicationUser? ApplicationUser { get; set; }
    public int PickupCode { get; set; }
    
    [DataType(DataType.Date)]

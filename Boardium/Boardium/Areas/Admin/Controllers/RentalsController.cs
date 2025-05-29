@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Boardium.Areas.Admin.Mappers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Boardium.Data;
 using Boardium.Models.Rental;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using ZXing.QrCode.Internal;
 
 namespace Boardium.Areas.Admin.Controllers
 {
@@ -17,11 +20,13 @@ namespace Boardium.Areas.Admin.Controllers
     {
         private ILogger<RentalsController> _logger;
         private readonly BoardiumContext _context;
+        private readonly RentalMapper _rentalMapper;
 
-        public RentalsController(BoardiumContext context, ILogger<RentalsController> logger)
+        public RentalsController(BoardiumContext context, ILogger<RentalsController> logger, RentalMapper rentalMapper)
         {
             _logger = logger;
             _context = context;
+            _rentalMapper = rentalMapper;
         }
 
         // GET: Admin/Rentals
@@ -30,7 +35,31 @@ namespace Boardium.Areas.Admin.Controllers
             var boardiumContext = _context.Rentals.Include(r => r.ApplicationUser).Include(r => r.GameCopy);
             return View(await boardiumContext.ToListAsync());
         }
+        public async Task<IActionResult> ProcessIndex(int? status)
+        {
+            var query = _context.Rentals
+                .Include(r => r.GameCopy)
+                .ThenInclude(gc => gc.Game)
+                .Include(r => r.ApplicationUser)
+                .AsQueryable();
 
+            if (status.HasValue)
+            {
+                query = query.Where(r => (int)r.Status == status.Value);
+            }
+
+            var rentals = await query.ToListAsync();
+
+            var rentalDtos = rentals.Select(r => _rentalMapper.Map(r)).ToList();
+
+            var vm = new RentalProcessIndexViewModel
+            {
+                Rentals = rentalDtos,
+                SelectedStatus = status
+            };
+
+            return View(vm);
+        }
         // GET: Admin/Rentals/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -80,6 +109,7 @@ namespace Boardium.Areas.Admin.Controllers
             var rental = await _context.Rentals
                 .Include(r=> r.ApplicationUser)
                 .Include(r => r.GameCopy)
+                    .ThenInclude(gc => gc.Game)
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (rental == null)
             {
@@ -92,13 +122,18 @@ namespace Boardium.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Process(Rental rental)
         {
+            ModelState.Remove("Notes");
             if (ModelState.IsValid)
             {
                 _context.Update(rental);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            return View(rental);
+            var rentalFromDb = await _context.Rentals
+                .Include(r => r.ApplicationUser)
+                .Include(r => r.GameCopy).ThenInclude(gc => gc.Game)
+                .FirstOrDefaultAsync(r => r.Id == rental.Id);
+            return View(rentalFromDb);
         }
         // GET: Admin/Rentals/Create
         public IActionResult Create()
