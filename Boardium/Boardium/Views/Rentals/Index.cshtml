@@ -17,12 +17,24 @@
                 <tr><th>Condition:</th><td>@Model.Condition</td></tr>
                 <tr><th>Inventory Number:</th><td>@Model.InventoryNumber</td></tr>
                 <tr><th>Rental Fee:</th><td>@Model.RentalFee.ToString("C")</td></tr>
-                <tr><th>@(Model.DueDate != null ? "Will Be Available After" : "Status")</th><td>@(Model.DueDate?.ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
-            </table>
-        </div>
-    </div>
+                @{
+                    var now = DateTime.Now;
+                    if (@Model.BorrowDate > now) {
+						// <td>Available before @Model.BorrowDate?.ToString("dd MMMM yyyy")</td>
+						<tr><th>Must Be Returned Before</th><td>@(Model.BorrowDate?.ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
+					} else if (@Model.DueDate > now) {
+						// <td>Available after @Model.DueDate?.ToString("dd MMMM yyyy")</td>
+						<tr><th>Is Available After</th><td>@(Model.DueDate?.ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
+					} else {
+						<tr><th>Status</th><td>Available Now</td></tr>
+						// <td>Available</td>
+					}
+				}
+			</table>
+		</div>
+	</div>
 
-    <hr />
+	<hr />
 
     <!-- Future Borrows Table -->
     <h4>Future Reservations</h4>

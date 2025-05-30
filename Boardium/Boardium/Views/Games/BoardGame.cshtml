@@ -74,7 +74,14 @@
                                 @if (@copy.DueDate == null) {
                                     <td>Available.</td>
                                 } else {
-                                    <td>Available until @copy.DueDate?.ToString("dd MMMM yyyy")</td>
+                                    var now = DateTime.Now;
+                                    if (@copy.BorrowDate > now) {
+                                        <td>Available before @copy.BorrowDate?.ToString("dd MMMM yyyy")</td>
+                                    } else if (@copy.DueDate > now) {
+                                        <td>Available after @copy.DueDate?.ToString("dd MMMM yyyy")</td>
+                                    } else {
+                                        <td>Available</td>
+                                    }
                                 }
                     </tr>
                 }

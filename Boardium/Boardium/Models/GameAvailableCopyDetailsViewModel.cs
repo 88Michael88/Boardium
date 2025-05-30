@@ -9,6 +9,7 @@ namespace Boardium.Models {
         public string InventoryNumber { get; set; }
         public GameCondition Condition { get; set; }
         public decimal RentalFee { get; set; }
+        public DateTime? BorrowDate { get; set; }
         public DateTime? DueDate { get; set; }
         public List<BorrowInfo>? FutureBorrows { get; set; }
         public string PathToImage { get; set; }

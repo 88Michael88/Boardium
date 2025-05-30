@@ -37,6 +37,7 @@ namespace Boardium.Controllers {
                                                         Condition = gc.Condition,
                                                         InventoryNumber = gc.InventoryNumber,
                                                         RentalFee = gc.RentalFee,
+                                                        BorrowDate = rental.RentedAt,
                                                         DueDate = rental.DueDate
                                                     }
                                                    ).ToArrayAsync();

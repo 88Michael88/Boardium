@@ -33,6 +33,7 @@ namespace Boardium.Controllers {
                                                                        Condition = gc.Condition,
                                                                        InventoryNumber = gc.InventoryNumber,
                                                                        RentalFee = gc.RentalFee,
+                                                                       BorrowDate = rental.RentedAt,
                                                                        DueDate = rental.DueDate,
                                                                        FutureBorrows = new List<BorrowInfo>(),
                                                                        PathToImage = "Catan_Example_Game.jpg" 
