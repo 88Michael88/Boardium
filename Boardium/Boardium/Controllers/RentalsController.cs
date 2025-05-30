@@ -25,7 +25,10 @@ namespace Boardium.Controllers {
                        join g in _context.Games on gc.GameId equals g.Id
                        join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalGroup
                        from rental in rentalGroup.DefaultIfEmpty() // LEFT JOIN
+                       join gi in _context.GameImages on gc.GameId equals gi.GameId
                        where gc.GameId == GameID && gc.Id == GameCopyID 
+                       && gi.IsCoverImage
+                       && rental.RentedAt == null
                        select new GameAvailableCopyDetailsViewModel {
                                                                      GameCopyID = gc.Id,
                                                                        GameID = gc.GameId,
@@ -36,7 +39,7 @@ namespace Boardium.Controllers {
                                                                        BorrowDate = rental.RentedAt,
                                                                        DueDate = rental.DueDate,
                                                                        FutureBorrows = new List<BorrowInfo>(),
-                                                                       PathToImage = "Catan_Example_Game.jpg" 
+                                                                       PathToImage = gi.ImagePath
                        }).FirstOrDefaultAsync();
 
             if (gameCopyDetail == null)

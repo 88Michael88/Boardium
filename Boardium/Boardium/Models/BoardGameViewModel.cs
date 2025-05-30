@@ -1,5 +1,6 @@
 ﻿using Boardium.Models.Game;
 using Boardium.Models.Inventory;
+using Microsoft.EntityFrameworkCore;
 
 namespace Boardium.Models {
     public class BoardGameViewModel {
@@ -17,11 +18,13 @@ namespace Boardium.Models {
         public GameAvailableCopy[] GameCopies { get; set; }
     }
 
+    [Keyless]
     public class GameAvailableCopy {
         public int GameCopyID { get; set; }
         public int GameID { get; set; }
         public string InventoryNumber { get; set; }
         public GameCondition Condition { get; set; }
+        public decimal? DamageFee { get; set; } = 0;
         public decimal RentalFee { get; set; }
         public DateTime? BorrowDate { get; set; }
         public DateTime? DueDate { get; set; } 

@@ -27,20 +27,34 @@ namespace Boardium.Controllers {
 
             Publisher publisher = await _context.Publishers.Where(p => p.Id == game.PublisherId).FirstAsync();
 
-            GameAvailableCopy[] gameCopies = await (from gc in _context.GameCopies
-                                                    join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalsGroup
-                                                    from rental in rentalsGroup.DefaultIfEmpty()
-                                                    where gc.GameId == gameIndex
-                                                    select new GameAvailableCopy {
-                                                        GameCopyID = gc.Id,
-                                                        GameID = gc.GameId,
-                                                        Condition = gc.Condition,
-                                                        InventoryNumber = gc.InventoryNumber,
-                                                        RentalFee = gc.RentalFee,
-                                                        BorrowDate = rental.RentedAt,
-                                                        DueDate = rental.DueDate
-                                                    }
-                                                   ).ToArrayAsync();
+            var sql = @"
+                        WITH RankedRentals AS (
+                            SELECT 
+                                GC.Id, 
+                                GC.GameId, 
+                                GC.Condition, 
+                                GC.InventoryNumber, 
+                                R.RentedAt, 
+                                R.DueDate,
+                                ROW_NUMBER() OVER (PARTITION BY GC.Id ORDER BY R.RentedAt ASC) AS rn
+                            FROM GameCopies AS GC
+                            LEFT OUTER JOIN Rentals AS R ON GC.Id = R.GameCopyId
+                            WHERE GC.GameId = {0} AND R.ReturnedAt IS NULL
+                        )
+                        SELECT 
+                            Id, 
+                            GameId, 
+                            Condition, 
+                            InventoryNumber, 
+                            RentedAt, 
+                            DueDate
+                        FROM RankedRentals
+                        WHERE rn = 1;
+                    ";
+
+            var gameCopies = await _context.Set<GameAvailableCopy>()
+                .FromSqlRaw(sql, gameIndex)
+                .ToArrayAsync();
 
             BoardGameViewModel model = new BoardGameViewModel {
                 Id = game.Id,
