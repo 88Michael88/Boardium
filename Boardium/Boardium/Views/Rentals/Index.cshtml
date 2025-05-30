@@ -21,10 +21,10 @@
                     var now = DateTime.Now;
                     if (@Model.BorrowDate > now) {
 						// <td>Available before @Model.BorrowDate?.ToString("dd MMMM yyyy")</td>
-						<tr><th>Must Be Returned Before</th><td>@(Model.BorrowDate?.ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
+						<tr><th>Must Be Returned Before</th><td>@(Model.BorrowDate?.AddDays(-1).ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
 					} else if (@Model.DueDate > now) {
 						// <td>Available after @Model.DueDate?.ToString("dd MMMM yyyy")</td>
-						<tr><th>Is Available After</th><td>@(Model.DueDate?.ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
+						<tr><th>Is Available After</th><td>@(Model.DueDate?.AddDays(1).ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
 					} else {
 						<tr><th>Status</th><td>Available Now</td></tr>
 						// <td>Available</td>
@@ -37,8 +37,8 @@
 	<hr />
 
     <!-- Future Borrows Table -->
-    <h4>Future Reservations</h4>
-    @if (Model.FutureBorrows.Any())
+    <h4>Current Reservations</h4>
+    @if (Model.CurrentBorrows.Any())
     {
         <table class="table table-striped">
             <thead>
@@ -48,11 +48,11 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach (var borrow in Model.FutureBorrows)
+                @foreach (var borrow in Model.CurrentBorrows)
                 {
                     <tr>
-                        <td>@borrow.RentDate.ToString("dd MMMM yyyy")</td>
-                        <td>@borrow.DueDate.ToString("dd MMMM yyyy")</td>
+                        <td>@borrow.BorrowDate.AddDays(-1).ToString("dd MMMM yyyy")</td>
+                        <td>@borrow.DueDate.AddDays(1).ToString("dd MMMM yyyy")</td>
                     </tr>
                 }
             </tbody>

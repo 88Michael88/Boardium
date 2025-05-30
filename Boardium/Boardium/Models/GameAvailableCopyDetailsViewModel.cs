@@ -11,12 +11,12 @@ namespace Boardium.Models {
         public decimal RentalFee { get; set; }
         public DateTime? BorrowDate { get; set; }
         public DateTime? DueDate { get; set; }
-        public List<BorrowInfo>? FutureBorrows { get; set; }
+        public List<BorrowInfo>? CurrentBorrows { get; set; }
         public string PathToImage { get; set; }
     }
 
     public class BorrowInfo {
-        public DateTime RentDate { get; set; }
+        public DateTime BorrowDate { get; set; }
         public DateTime DueDate { get; set; }
     }
 }

@@ -26,21 +26,31 @@ namespace Boardium.Controllers {
                        join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalGroup
                        from rental in rentalGroup.DefaultIfEmpty() // LEFT JOIN
                        join gi in _context.GameImages on gc.GameId equals gi.GameId
-                       where gc.GameId == GameID && gc.Id == GameCopyID 
+                       where gc.GameId == GameID && gc.Id == GameCopyID
                        && gi.IsCoverImage == true
                        && rental.ReturnedAt == null
+                       orderby rental.RentedAt
                        select new GameAvailableCopyDetailsViewModel {
-                                                                     GameCopyID = gc.Id,
-                                                                       GameID = gc.GameId,
-                                                                       Title = g.Title,
-                                                                       Condition = gc.Condition,
-                                                                       InventoryNumber = gc.InventoryNumber,
-                                                                       RentalFee = gc.RentalFee,
-                                                                       BorrowDate = rental.RentedAt,
-                                                                       DueDate = rental.DueDate,
-                                                                       FutureBorrows = new List<BorrowInfo>(),
-                                                                       PathToImage = gi.ImagePath
-                       }).FirstOrDefaultAsync();
+                                                                    GameCopyID = gc.Id,
+                                                                    GameID = gc.GameId,
+                                                                    Title = g.Title,
+                                                                    Condition = gc.Condition,
+                                                                    InventoryNumber = gc.InventoryNumber,
+                                                                    RentalFee = gc.RentalFee,
+                                                                    BorrowDate = rental.RentedAt,
+                                                                    DueDate = rental.DueDate,
+                                                                    CurrentBorrows = (from r in _context.Rentals
+                                                                                     where r.GameCopyId == GameCopyID
+                                                                                     && r.ReturnedAt == null
+                                                                                     && r.DueDate > DateTime.Now
+                                                                                     orderby r.RentedAt
+                                                                                     select new BorrowInfo {
+                                                                                            BorrowDate = r.RentedAt,
+                                                                                            DueDate = r.DueDate
+                                                                                     }
+                                                                                    ).ToList(),
+                                                                    PathToImage = gi.ImagePath
+                                                                    }).FirstOrDefaultAsync();
 
             if (gameCopyDetail == null)
                 return NotFound();
@@ -91,7 +101,7 @@ namespace Boardium.Controllers {
             };
 
             _context.Rentals.Add(newRental);
-            await _context.SaveChangesAsync();
+//            await _context.SaveChangesAsync();
 
             return View();
         }
