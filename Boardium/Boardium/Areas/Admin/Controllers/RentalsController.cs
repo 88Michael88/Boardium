@@ -23,13 +23,16 @@ namespace Boardium.Areas.Admin.Controllers
         private readonly BoardiumContext _context;
         private readonly RentalMapper _rentalMapper;
         private readonly EmailService _emailService;
+        private readonly QrCodeService _qrCodeService;
 
-        public RentalsController(BoardiumContext context, ILogger<RentalsController> logger, RentalMapper rentalMapper, EmailService emailService)
+        public RentalsController(BoardiumContext context, ILogger<RentalsController> logger, RentalMapper rentalMapper,
+            EmailService emailService, QrCodeService qrCodeService)
         {
             _logger = logger;
             _context = context;
             _rentalMapper = rentalMapper;
             _emailService = emailService;
+            _qrCodeService = qrCodeService;
         }
 
         // GET: Admin/Rentals
@@ -38,6 +41,7 @@ namespace Boardium.Areas.Admin.Controllers
             var boardiumContext = _context.Rentals.Include(r => r.ApplicationUser).Include(r => r.GameCopy);
             return View(await boardiumContext.ToListAsync());
         }
+
         public async Task<IActionResult> ProcessIndex(int? status)
         {
             var query = _context.Rentals
@@ -63,6 +67,7 @@ namespace Boardium.Areas.Admin.Controllers
 
             return View(vm);
         }
+
         // GET: Admin/Rentals/Details/5
         public async Task<IActionResult> Details(int? id)
         {
@@ -74,12 +79,13 @@ namespace Boardium.Areas.Admin.Controllers
             var rental = await _context.Rentals
                 .Include(r => r.ApplicationUser)
                 .Include(r => r.GameCopy)
-                .ThenInclude(gc=> gc.Game)
+                .ThenInclude(gc => gc.Game)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (rental == null)
             {
                 return NotFound();
             }
+
             return View(rental);
         }
 
@@ -90,6 +96,7 @@ namespace Boardium.Areas.Admin.Controllers
                 _logger.Log(LogLevel.Error, "Pickup code is null");
                 return View(pickupCode);
             }
+
             var rentalId = await _context.Rentals
                 .Where(r => r.PickupCode == pickupCode)
                 .Select(r => (int?)r.Id)
@@ -99,33 +106,37 @@ namespace Boardium.Areas.Admin.Controllers
             {
                 return RedirectToAction(nameof(Process), new { id = rentalId });
             }
+
             ViewBag.Error = "Nie znaleziono wypożyczenia dla podanego kodu.";
             return View(pickupCode);
         }
+
         public async Task<IActionResult> Process(int? id)
         {
             if (id == null)
             {
                 return NotFound();
             }
-            
+
             var rental = await _context.Rentals
-                .Include(r=> r.ApplicationUser)
+                .Include(r => r.ApplicationUser)
                 .Include(r => r.GameCopy)
-                    .ThenInclude(gc => gc.Game)
+                .ThenInclude(gc => gc.Game)
                 .FirstOrDefaultAsync(r => r.Id == id);
             if (rental == null)
             {
                 return NotFound();
             }
+
             ViewBag.RentalStatus = new SelectList(
                 Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>()
-                    .Select(s => new { Id = s, Name = s.ToString() }), 
-                "Id", 
+                    .Select(s => new { Id = s, Name = s.ToString() }),
+                "Id",
                 "Name",
                 rental.Status);
             return View(rental);
         }
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Process(Rental rental)
@@ -159,7 +170,8 @@ namespace Boardium.Areas.Admin.Controllers
 
             if (rentalFromDb == null)
                 return NotFound();
-
+            bool sendMail = rental.Status == RentalStatus.WaitingForPickup &&
+                            rentalFromDb.Status != RentalStatus.WaitingForPickup;
             rentalFromDb.RentedAt = rental.RentedAt;
             rentalFromDb.DueDate = rental.DueDate;
             rentalFromDb.ReturnedAt = rental.ReturnedAt;
@@ -171,6 +183,27 @@ namespace Boardium.Areas.Admin.Controllers
             rentalFromDb.PaidFee = rental.PaidFee;
 
             await _context.SaveChangesAsync();
+            if (sendMail)
+            {
+                var rentalMail = await _context.Rentals.Include(r => r.ApplicationUser).Include(r => r.GameCopy)
+                    .ThenInclude(gc => gc.Game).FirstOrDefaultAsync(r => r.Id == rentalFromDb.Id);
+
+                try
+                {
+                    var qrCodeBytes = _qrCodeService.GenerateQrCodeBytes(rentalMail.PickupCode.ToString());
+                    await _emailService.SendConfirmationAsync(
+                        rentalMail.ApplicationUser.Email,
+                        rentalMail.ApplicationUser.FirstName,
+                        rentalMail.GameCopy.Game.Title,
+                        qrCodeBytes,
+                        rentalMail.PickupCode.ToString()
+                    );
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, " Error sending confirmation email for rental {RentalId}.", rentalMail.Id);
+                }
+            }
 
             return RedirectToAction(nameof(ProcessIndex));
         }
@@ -188,7 +221,10 @@ namespace Boardium.Areas.Admin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,GameCopyId,ApplicationUserId,PickupCode,RentedAt,DueDate,ReturnedAt,Status,Notes,RentalFee,LateFee,DamageFee,PaidFee")] Rental rental)
+        public async Task<IActionResult> Create(
+            [Bind(
+                "Id,GameCopyId,ApplicationUserId,PickupCode,RentedAt,DueDate,ReturnedAt,Status,Notes,RentalFee,LateFee,DamageFee,PaidFee")]
+            Rental rental)
         {
             if (ModelState.IsValid)
             {
@@ -196,6 +232,7 @@ namespace Boardium.Areas.Admin.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["ApplicationUserId"] = new SelectList(_context.Users, "Id", "Id", rental.ApplicationUserId);
             ViewData["GameCopyId"] = new SelectList(_context.GameCopies, "Id", "InventoryNumber", rental.GameCopyId);
             return View(rental);
@@ -214,6 +251,7 @@ namespace Boardium.Areas.Admin.Controllers
             {
                 return NotFound();
             }
+
             ViewData["ApplicationUserId"] = new SelectList(_context.Users, "Id", "Id", rental.ApplicationUserId);
             ViewData["GameCopyId"] = new SelectList(_context.GameCopies, "Id", "InventoryNumber", rental.GameCopyId);
             return View(rental);
@@ -224,7 +262,10 @@ namespace Boardium.Areas.Admin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,GameCopyId,ApplicationUserId,PickupCode,RentedAt,DueDate,ReturnedAt,Status,Notes,RentalFee,LateFee,DamageFee,PaidFee")] Rental rental)
+        public async Task<IActionResult> Edit(int id,
+            [Bind(
+                "Id,GameCopyId,ApplicationUserId,PickupCode,RentedAt,DueDate,ReturnedAt,Status,Notes,RentalFee,LateFee,DamageFee,PaidFee")]
+            Rental rental)
         {
             if (id != rental.Id)
             {
@@ -249,8 +290,10 @@ namespace Boardium.Areas.Admin.Controllers
                         throw;
                     }
                 }
+
                 return RedirectToAction(nameof(Index));
             }
+
             ViewData["ApplicationUserId"] = new SelectList(_context.Users, "Id", "Id", rental.ApplicationUserId);
             ViewData["GameCopyId"] = new SelectList(_context.GameCopies, "Id", "InventoryNumber", rental.GameCopyId);
             return View(rental);

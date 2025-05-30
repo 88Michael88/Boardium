@@ -16,6 +16,7 @@ builder.Services.AddScoped<SeedData>();
 builder.Services.AddScoped<UserMapper>();
 builder.Services.AddScoped<RentalMapper>();
 builder.Services.AddTransient<EmailTemplateRenderer>();
+builder.Services.AddTransient<QrCodeService>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddAuthentication();

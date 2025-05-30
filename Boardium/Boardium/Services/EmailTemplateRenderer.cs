@@ -27,7 +27,7 @@ public class EmailTemplateRenderer
         {
             content = content.Replace($"{{{{{key}}}}}", value);
         }
-
+        _logger.LogInformation(content);
         return content;
     }
 }
