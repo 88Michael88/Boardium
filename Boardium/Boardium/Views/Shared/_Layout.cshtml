@@ -37,10 +37,10 @@
                     @{
                         <ul class="navbar-nav ms-auto">
 
-								<li>
-									<a class="nav-link text-dark" asp-controller="Rentals" asp-action="MyRentals">My Rentals</a>
-								</li>
 								@if (User.Identity?.IsAuthenticated ?? false) {
+									<li>
+										<a class="nav-link text-dark" asp-controller="Rentals" asp-action="MyRentals">My Rentals</a>
+									</li>
 									ApplicationUser? currentUser = await UserManager.GetUserAsync(User);
 									<li class="nav-item">
 										<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index">Hello @currentUser?.FirstName!</a>
