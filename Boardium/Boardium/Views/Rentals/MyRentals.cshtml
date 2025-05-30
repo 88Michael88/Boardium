@@ -1,6 +1,56 @@
-﻿@{
-    ViewData["Title"] = "MyRentals";
+﻿@model IEnumerable<Boardium.Models.ShowUserRentalData>
+
+@{
+    ViewData["Title"] = "My Rentals";
 }
 
-<h1>MyRentals</h1>
+@functions {
+    public string FormatEnumString(string input) {
+        return System.Text.RegularExpressions.Regex.Replace(input, "(?<!^)([A-Z])", " $1");
+    }
+}
 
+<div class="container mt-5">
+    <h2 class="mb-4">My Rentals</h2>
+
+    @if (!Model.Any()) {
+        <div class="alert alert-info">
+            You haven't rented any games yet.
+        </div>
+    } else {
+        <table class="table table-bordered table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col">Game Title</th>
+                    <th scope="col">Inventory #</th>
+                    <th scope="col">Rented At</th>
+                    <th scope="col">Due Date</th>
+                    <th scope="col">Returned Status</th>
+                    <th scope="col">Rental Fee</th>
+                    <th scope="col">Late Fee</th>
+                    <th scope="col">Damage Fee</th>
+                    <th scope="col">Total Paid</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Pickup Code</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var rental in Model) {
+                    <tr>
+                        <td>@rental.GameTitle</td>
+                        <td>@rental.InventoryNumber</td>
+                        <td>@rental.RentedAt.ToString("dd MMM yyyy")</td>
+                        <td>@rental.DueDate.ToString("dd MMM yyyy")</td>
+                        <td>@(rental.ReturnedAt?.ToString("dd MMM yyyy") ?? "Not returned")</td>
+                        <td>@rental.RentalFee?.ToString("C")</td>
+                        <td>@rental.LateFee?.ToString("C")</td>
+                        <td>@rental.DamageFee?.ToString("C")</td>
+                        <td>@rental.PaidFee.ToString("C")</td>
+                        <td>@FormatEnumString(rental.Status.ToString())</td>
+                        <td>@(rental.PickupCode == 0 ? "" : rental.PickupCode)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

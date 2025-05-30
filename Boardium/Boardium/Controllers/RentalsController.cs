@@ -124,8 +124,27 @@ namespace Boardium.Controllers {
         }
         [Authorize]
         public async Task<IActionResult> MyRentals() {
+            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var rentals = await (from r in _context.Rentals
+                                 join gc in _context.GameCopies on r.GameCopyId equals gc.Id
+                                 join g in _context.Games on gc.GameId equals g.Id
+                                 where r.ApplicationUserId == userId
+                                 select new ShowUserRentalData {
+                                     GameTitle = g.Title,
+                                     InventoryNumber = gc.InventoryNumber,
+                                     RentedAt = r.RentedAt,
+                                     DueDate = r.DueDate,
+                                     ReturnedAt = r.ReturnedAt,
+                                     Status = r.Status,
+                                     RentalFee = r.RentalFee,
+                                     LateFee = r.LateFee,
+                                     DamageFee = r.DamageFee,
+                                     PaidFee = r.PaidFee,
+                                     PickupCode = r.PickupCode
+                                 }
+                                ).ToListAsync();
 
-            return View();
+            return View(rentals);
         }
 
     }
