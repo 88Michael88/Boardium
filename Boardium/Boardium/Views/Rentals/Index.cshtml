@@ -51,7 +51,7 @@
                 @foreach (var borrow in Model.CurrentBorrows)
                 {
                     <tr>
-                        <td>@borrow.BorrowDate.AddDays(-1).ToString("dd MMMM yyyy")</td>
+                        <td>@borrow.BorrowDate.ToString("dd MMMM yyyy")</td>
                         <td>@borrow.DueDate.AddDays(1).ToString("dd MMMM yyyy")</td>
                     </tr>
                 }
@@ -82,7 +82,7 @@
         <input type="hidden" name="DesiredBorrowDate" id="hiddenBorrowDate" />
 
         <button id="rentButton" type="submit" class="btn btn-danger btn-lg w-100" disabled>
-            Rent Board Game
+            Save and Rent the Board Game
         </button>
     </form>
 

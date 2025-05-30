@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Boardium.Migrations
 {
     [DbContext(typeof(BoardiumContext))]
-    [Migration("20250530083230_ADD_GameAvailableCopy_to_the_context_bEcAsE_LinQU")]
+    [Migration("20250530121055_ADD_GameAvailableCopy_to_the_context_bEcAsE_LinQU")]
     partial class ADD_GameAvailableCopy_to_the_context_bEcAsE_LinQU
     {
         /// <inheritdoc />

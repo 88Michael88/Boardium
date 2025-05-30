@@ -10,21 +10,13 @@ namespace Boardium.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "DamageFee",
-                table: "GameAvailableCopies");
+
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<decimal>(
-                name: "DamageFee",
-                table: "GameAvailableCopies",
-                type: "decimal(10,2)",
-                precision: 10,
-                scale: 2,
-                nullable: true);
+
         }
     }
 }

@@ -61,29 +61,32 @@ namespace Boardium.Controllers {
         [HttpPost]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Confirm(int GameID, int GameCopyID, DateTime DesiredBorrowDate, DateTime DesiredDueDate) {
-            // TODO:
-            // Confirm if such a time period is allowed.
-            // If so then add the rental to the database.
-            // Change the IsAvailable status of the GameCopy.
-            decimal? rentalFee = await (from gc in _context.GameCopies
+            if (DesiredBorrowDate < DateTime.Now || DesiredDueDate < DateTime.Now || DesiredDueDate < DesiredBorrowDate) // Basic Date confirmation.
+                return RedirectToAction(nameof(Index), new { GameID = GameID, GameCopyID = GameCopyID });
+
+            decimal? rentalFee = await (from gc in _context.GameCopies // Check if such a game exists.
                                         where gc.GameId == GameID && gc.Id == GameCopyID
                                         select gc.RentalFee
                                         ).FirstOrDefaultAsync();
             if (rentalFee == null) return NotFound();
 
-            GameDataBeforeRental[] gameCopy = await (from gc in _context.GameCopies
-                                                   join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalGroup
-                                                   from rental in rentalGroup.DefaultIfEmpty() // LEFT JOIN
-                                                   where rental.ReturnedAt == null
-                                                   && rental.GameCopyId == GameCopyID
-                                                   select new GameDataBeforeRental {
-                                                       RentDate = rental.RentedAt,
-                                                       DueDate = rental.DueDate,
-                                                   }
-                                                    ).ToArrayAsync();
+            BorrowInfo[] gameBorrowInfo = await (from gc in _context.GameCopies // Get all the current rentals of this game copy.
+                                                 join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalGroup
+                                                 from rental in rentalGroup.DefaultIfEmpty() // LEFT JOIN
+                                                 where rental.ReturnedAt == null
+                                                 && rental.GameCopyId == GameCopyID
+                                                 && rental.DueDate > DateTime.Now
+                                                 select new BorrowInfo {
+                                                     BorrowDate = rental.RentedAt,
+                                                     DueDate = rental.DueDate,
+                                                 }
+                                          ).ToArrayAsync();
 
-            if (gameCopy != null)
-                gameCopy = gameCopy;
+            if (gameBorrowInfo != null) { // Thorough Date confirmation
+                if (dateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || dateIsBetweenDates(DesiredDueDate, gameBorrowInfo))  {
+                    return RedirectToAction(nameof(Index), new { GameID = GameID, GameCopyID = GameCopyID });
+                }
+            }
 
             string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var newRental = new Rental {
@@ -101,9 +104,21 @@ namespace Boardium.Controllers {
             };
 
             _context.Rentals.Add(newRental);
-//            await _context.SaveChangesAsync();
+            await _context.SaveChangesAsync();
+
+            // TODO:
+            // Sent an email with the order.
 
             return View();
+        }
+
+        private bool dateIsBetweenDates(DateTime date, BorrowInfo[] borrowInfo) {
+            foreach (BorrowInfo borrowRow in borrowInfo) {
+                if (date <= borrowRow.DueDate.AddDays(1) && date >= borrowRow.BorrowDate.AddDays(-1)) {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 }
