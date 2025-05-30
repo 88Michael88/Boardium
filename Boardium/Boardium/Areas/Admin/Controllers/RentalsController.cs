@@ -132,32 +132,49 @@ namespace Boardium.Areas.Admin.Controllers
         {
             ModelState.Remove("Notes");
             ModelState.Remove("ApplicationUserId");
+
             if (rental.Notes == null)
-            {
                 rental.Notes = string.Empty;
-            }
-            if (ModelState.IsValid)
+
+            if (!ModelState.IsValid)
             {
-                _context.Update(rental);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                _logger.LogError("Invalid model state for rental {RentalId}.", rental.Id);
+
+                ViewBag.RentalStatus = new SelectList(
+                    Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>()
+                        .Select(s => new { Id = s, Name = s.ToString() }),
+                    "Id", "Name", rental.Status);
+
+                var rentalFromDbFallback = await _context.Rentals
+                    .Include(r => r.ApplicationUser)
+                    .Include(r => r.GameCopy)
+                    .ThenInclude(gc => gc.Game)
+                    .FirstOrDefaultAsync(r => r.Id == rental.Id);
+
+                return View(rentalFromDbFallback);
             }
-            else
-            {
-                _logger.Log(LogLevel.Error, "Model state is invalid for rental processing. Errors: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
-            }
-            ViewBag.RentalStatus = new SelectList(
-                Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>()
-                    .Select(s => new { Id = s, Name = s.ToString() }), 
-                "Id", 
-                "Name",
-                rental.Status);
+
             var rentalFromDb = await _context.Rentals
-                .Include(r => r.ApplicationUser)
-                .Include(r => r.GameCopy).ThenInclude(gc => gc.Game)
                 .FirstOrDefaultAsync(r => r.Id == rental.Id);
-            return View(rentalFromDb);
+
+            if (rentalFromDb == null)
+                return NotFound();
+
+            rentalFromDb.RentedAt = rental.RentedAt;
+            rentalFromDb.DueDate = rental.DueDate;
+            rentalFromDb.ReturnedAt = rental.ReturnedAt;
+            rentalFromDb.Status = rental.Status;
+            rentalFromDb.Notes = rental.Notes;
+            rentalFromDb.RentalFee = rental.RentalFee;
+            rentalFromDb.LateFee = rental.LateFee;
+            rentalFromDb.DamageFee = rental.DamageFee;
+            rentalFromDb.PaidFee = rental.PaidFee;
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction(nameof(ProcessIndex));
         }
+
         // GET: Admin/Rentals/Create
         public IActionResult Create()
         {
