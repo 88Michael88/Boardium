@@ -7,6 +7,7 @@ using System.Security.Claims;
 using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
 using Microsoft.VisualBasic;
+using Microsoft.AspNetCore.Identity;
 
 namespace Boardium.Controllers {
     public class RentalsController : Controller {
@@ -121,5 +122,11 @@ namespace Boardium.Controllers {
             }
             return false;
         }
+        [Authorize]
+        public async Task<IActionResult> MyRentals() {
+
+            return View();
+        }
+
     }
 }

@@ -36,27 +36,27 @@
                     </li>
                     @{
                         <ul class="navbar-nav ms-auto">
-                            
-                                @if (User.Identity?.IsAuthenticated ?? false)
-                                {
-                                    ApplicationUser? currentUser = await UserManager.GetUserAsync(User);
-                                    <li class="nav-item">
-                                    <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index">Hello @currentUser?.FirstName!</a>
-                                    </li> 
-                                    <li class="nav-item">
-                                    <form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
-                                        <button type="submit" class="nav-link fw-bold btn btn-link text-danger">Logout</button>
-                                    </form>
-                                    </li>
-                            }
-                            else
-                            {
-                                <li class="nav-item">
-                                <a asp-area="Identity" asp-page="/Account/Login" class="nav-link text-dark">Log in</a>
-                                </li>
-                                }
-                            
-                        </ul>
+
+								<li>
+									<a class="nav-link text-dark" asp-controller="Rentals" asp-action="MyRentals">My Rentals</a>
+								</li>
+								@if (User.Identity?.IsAuthenticated ?? false) {
+									ApplicationUser? currentUser = await UserManager.GetUserAsync(User);
+									<li class="nav-item">
+										<a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index">Hello @currentUser?.FirstName!</a>
+									</li>
+									<li class="nav-item">
+										<form class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Page("/", new { area = "" })" method="post">
+											<button type="submit" class="nav-link fw-bold btn btn-link text-danger">Logout</button>
+										</form>
+									</li>
+								} else {
+									<li class="nav-item">
+										<a asp-area="Identity" asp-page="/Account/Login" class="nav-link text-dark">Log in</a>
+									</li>
+								}
+
+							</ul>
                         
                         
                     }
