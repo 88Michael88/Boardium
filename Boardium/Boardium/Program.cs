@@ -1,6 +1,8 @@
 using Boardium.Areas.Admin.Mappers;
 using Boardium.Data;
 using Boardium.Models.Auth;
+using Boardium.Models.ServiceModels;
+using Boardium.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;    
 
@@ -13,6 +15,9 @@ builder.Services.AddDbContext<BoardiumContext>(options =>
 builder.Services.AddScoped<SeedData>();
 builder.Services.AddScoped<UserMapper>();
 builder.Services.AddScoped<RentalMapper>();
+builder.Services.AddTransient<EmailTemplateRenderer>();
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddTransient<EmailService>();
 builder.Services.AddAuthentication();
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     {

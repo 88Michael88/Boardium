@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Boardium.Data;
 using Boardium.Models.Rental;
+using Boardium.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using ZXing.QrCode.Internal;
@@ -21,12 +22,14 @@ namespace Boardium.Areas.Admin.Controllers
         private ILogger<RentalsController> _logger;
         private readonly BoardiumContext _context;
         private readonly RentalMapper _rentalMapper;
+        private readonly EmailService _emailService;
 
-        public RentalsController(BoardiumContext context, ILogger<RentalsController> logger, RentalMapper rentalMapper)
+        public RentalsController(BoardiumContext context, ILogger<RentalsController> logger, RentalMapper rentalMapper, EmailService emailService)
         {
             _logger = logger;
             _context = context;
             _rentalMapper = rentalMapper;
+            _emailService = emailService;
         }
 
         // GET: Admin/Rentals
@@ -71,12 +74,12 @@ namespace Boardium.Areas.Admin.Controllers
             var rental = await _context.Rentals
                 .Include(r => r.ApplicationUser)
                 .Include(r => r.GameCopy)
+                .ThenInclude(gc=> gc.Game)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (rental == null)
             {
                 return NotFound();
             }
-
             return View(rental);
         }
 
@@ -115,7 +118,12 @@ namespace Boardium.Areas.Admin.Controllers
             {
                 return NotFound();
             }
-            ViewData["RentalStatus"] = new SelectList(Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>(), rental.Status);
+            ViewBag.RentalStatus = new SelectList(
+                Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>()
+                    .Select(s => new { Id = s, Name = s.ToString() }), 
+                "Id", 
+                "Name",
+                rental.Status);
             return View(rental);
         }
         [HttpPost]
@@ -123,12 +131,27 @@ namespace Boardium.Areas.Admin.Controllers
         public async Task<IActionResult> Process(Rental rental)
         {
             ModelState.Remove("Notes");
+            ModelState.Remove("ApplicationUserId");
+            if (rental.Notes == null)
+            {
+                rental.Notes = string.Empty;
+            }
             if (ModelState.IsValid)
             {
                 _context.Update(rental);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            else
+            {
+                _logger.Log(LogLevel.Error, "Model state is invalid for rental processing. Errors: " + string.Join(", ", ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage)));
+            }
+            ViewBag.RentalStatus = new SelectList(
+                Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>()
+                    .Select(s => new { Id = s, Name = s.ToString() }), 
+                "Id", 
+                "Name",
+                rental.Status);
             var rentalFromDb = await _context.Rentals
                 .Include(r => r.ApplicationUser)
                 .Include(r => r.GameCopy).ThenInclude(gc => gc.Game)

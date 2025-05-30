@@ -1,6 +1,7 @@
 using Boardium.Areas.Admin.Mappers;
 using Boardium.Areas.Admin.Models;
 using Boardium.Models.Auth;
+using Boardium.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,18 +18,21 @@ public class UsersController : Controller
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly UserMapper _userMapper;
     private readonly ILogger<UsersController> _logger;
+    private readonly EmailService _emailService;
 
     public UsersController(
         UserManager<ApplicationUser> userManager,
         RoleManager<IdentityRole> roleManager,
         UserMapper userMapper,
-        ILogger<UsersController> logger
+        ILogger<UsersController> logger,
+        EmailService emailService
         )
     {
         _userManager = userManager;
         _roleManager = roleManager;
         _userMapper = userMapper;
         _logger = logger;
+        _emailService = emailService;
     }
 
     public async Task<IActionResult> Index(int page = 1, int pageSize = 10)
