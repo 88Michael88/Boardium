@@ -5,6 +5,8 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -26,6 +28,7 @@
       <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration" Version="9.0.0" />
       <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
       <PackageReference Include="SkiaSharp" Version="3.119.0" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.2" />
       <PackageReference Include="ZXing.Net" Version="0.16.10" />
       <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.21" />
     </ItemGroup>
