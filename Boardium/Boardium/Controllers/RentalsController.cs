@@ -108,6 +108,7 @@ namespace Boardium.Controllers {
 
             // TODO:
             // Sent an email with the order.
+            // Is there a transaction made automatically, so that a different user can't rent a board game at the same time?
 
             return View();
         }
