@@ -20,6 +20,7 @@ public class BoardiumContext : IdentityDbContext<ApplicationUser>
     public DbSet<Models.Rental.Rental> Rentals { get; set; }
     public DbSet<Models.Inventory.GameCopy> GameCopies { get; set; }
     public DbSet<Models.Game.GameImage> GameImages { get; set; }
+    public DbSet<Models.GameAvailableCopy> GameAvailableCopies { get; set; }
     
     public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
@@ -52,6 +53,8 @@ public class BoardiumContext : IdentityDbContext<ApplicationUser>
             .WithMany(g=>g.GameCopies)
             .HasForeignKey(gc=>gc.GameId)
             .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<GameAvailableCopy>()
+            .HasNoKey();
         
     }
 }

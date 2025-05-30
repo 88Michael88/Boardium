@@ -67,14 +67,21 @@
                     </thead>
                     <tbody>
                         @foreach (var copy in Model.GameCopies) {
-                            <tr onclick="location.href='@Url.Action("Index", "Rentals", new { GameID = copy.GameID, GameCopy = copy.GameCopyID })'" style="cursor:pointer;">
+                            <tr onclick="location.href='@Url.Action("Index", "Rentals", new { GameID = copy.GameID, GameCopyID = copy.GameCopyID })'" style="cursor:pointer;">
                                 <td>@copy.InventoryNumber</td>
                                 <td>@copy.Condition</td>
                                 <td>@copy.RentalFee.ToString("C")</td>
                                 @if (@copy.DueDate == null) {
                                     <td>Available.</td>
                                 } else {
-                                    <td>Available until @copy.DueDate?.ToString("dd MMMM yyyy")</td>
+                                    var now = DateTime.Now;
+                                    if (@copy.BorrowDate > now) {
+                                        <td>Available before @copy.BorrowDate?.ToString("dd MMMM yyyy")</td>
+                                    } else if (@copy.DueDate > now) {
+                                        <td>Available after @copy.DueDate?.ToString("dd MMMM yyyy")</td>
+                                    } else {
+                                        <td>Available</td>
+                                    }
                                 }
                     </tr>
                 }

@@ -8,6 +8,4 @@ public enum RentalStatus
     Returned,
     Overdue,
     Canceled,
-    
-    
 }

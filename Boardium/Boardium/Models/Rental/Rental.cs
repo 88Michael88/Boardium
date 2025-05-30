@@ -14,7 +14,6 @@ public class Rental
    public string ApplicationUserId { get; set; }
    public ApplicationUser? ApplicationUser { get; set; }
    public int PickupCode { get; set; }
-   
    [DataType(DataType.Date)]
    public DateTime RentedAt { get; set; }
    [DataType(DataType.Date)]
