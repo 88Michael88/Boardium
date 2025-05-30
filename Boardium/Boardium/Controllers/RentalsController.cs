@@ -61,7 +61,7 @@ namespace Boardium.Controllers {
         [HttpPost]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Confirm(int GameID, int GameCopyID, DateTime DesiredBorrowDate, DateTime DesiredDueDate) {
-            if (DesiredBorrowDate < DateTime.Now || DesiredDueDate < DateTime.Now || DesiredDueDate < DesiredBorrowDate) // Basic Date confirmation.
+            if (DesiredBorrowDate < DateTime.Now.Date || DesiredDueDate < DateTime.Now || DesiredDueDate < DesiredBorrowDate) // Basic Date confirmation.
                 return RedirectToAction(nameof(Index), new { GameID = GameID, GameCopyID = GameCopyID });
 
             decimal? rentalFee = await (from gc in _context.GameCopies // Check if such a game exists.
@@ -110,7 +110,7 @@ namespace Boardium.Controllers {
             // Sent an email with the order.
             // Is there a transaction made automatically, so that a different user can't rent a board game at the same time?
 
-            return View();
+            return View(newRental);
         }
 
         private bool dateIsBetweenDates(DateTime date, BorrowInfo[] borrowInfo) {

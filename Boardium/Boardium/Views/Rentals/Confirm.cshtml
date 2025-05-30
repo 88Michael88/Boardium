@@ -1,7 +1,35 @@
-﻿
+﻿@model Boardium.Models.Rental.Rental;
 @{
-    ViewData["Title"] = "Confirm";
+    ViewData["Title"] = "Rental Confirmation";
 }
 
-<h1>Confirm</h1>
+<div class="container mt-5">
+    <div class="card shadow p-4">
+        <h2 class="mb-4 text-success">🎉 Rental Confirmed!</h2>
+        <p>We will E-mail you the Pick Up code when your order is accepted.</p>
 
+        <table class="table table-bordered">
+            <tr>
+                <th>Rental Status</th>
+                <td>Waiting For Acceptance</td>
+            </tr>
+            <tr>
+                <th>Rented At</th>
+                <td>@Model.RentedAt.ToString("dd MMM yyyy")</td>
+            </tr>
+            <tr>
+                <th>Due Date</th>
+                <td>@Model.DueDate.ToString("dd MMM yyyy")</td>
+            </tr>
+            <tr>
+                <th>Rental Fee</th>
+                <td>@Model.RentalFee?.ToString("C")</td>
+            </tr>
+        </table>
+
+        <div class="mt-4">
+            <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Return to Home</a>
+            <a asp-controller="Rentals" asp-action="History" class="btn btn-secondary ms-2">View My Rentals</a>
+        </div>
+    </div>
+</div>
