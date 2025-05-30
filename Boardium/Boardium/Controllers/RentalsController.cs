@@ -10,6 +10,7 @@ using Microsoft.VisualBasic;
 using Microsoft.AspNetCore.Identity;
 
 namespace Boardium.Controllers {
+    [Route("Rentals")]
     public class RentalsController : Controller {
         private readonly BoardiumContext _context;
         private readonly ILogger<GamesController> _logger;
@@ -18,7 +19,8 @@ namespace Boardium.Controllers {
             _context = context;
             _logger = logger;
         }
-        
+
+        [HttpGet("Index")]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Index(int GameID, int GameCopyID) {
             GameAvailableCopyDetailsViewModel? gameCopyDetail =
@@ -59,7 +61,7 @@ namespace Boardium.Controllers {
             return View(gameCopyDetail);
         }
 
-        [HttpPost]
+        [HttpPost("Confirm")]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Confirm(int GameID, int GameCopyID, DateTime DesiredBorrowDate, DateTime DesiredDueDate) {
             if (DesiredBorrowDate < DateTime.Now.Date || DesiredDueDate < DateTime.Now || DesiredDueDate < DesiredBorrowDate) // Basic Date confirmation.
@@ -122,7 +124,9 @@ namespace Boardium.Controllers {
             }
             return false;
         }
+
         [Authorize]
+        [HttpGet("MyRentals")]
         public async Task<IActionResult> MyRentals() {
             string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var rentals = await (from r in _context.Rentals

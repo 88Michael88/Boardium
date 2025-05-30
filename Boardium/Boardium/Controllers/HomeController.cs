@@ -13,16 +13,20 @@ public class HomeController : Controller
         _logger = logger;
     }
 
+    [HttpGet("/")]
     public IActionResult Index()
     {
         return View();
     }
 
+    [HttpGet("/Privacy")]
     public IActionResult Privacy()
     {
         return View();
     }
 
+
+    [HttpGet("/Error")]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
