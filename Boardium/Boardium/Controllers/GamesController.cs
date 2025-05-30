@@ -30,11 +30,12 @@ namespace Boardium.Controllers {
             var sql = @"
                         WITH RankedRentals AS (
                             SELECT 
-                                GC.Id, 
-                                GC.GameId, 
+                                GC.Id AS GameCopyID, 
+                                GC.GameId AS GameID, 
                                 GC.Condition, 
                                 GC.InventoryNumber, 
-                                R.RentedAt, 
+                                GC.RentalFee,
+                                R.RentedAt AS BorrowDate, 
                                 R.DueDate,
                                 ROW_NUMBER() OVER (PARTITION BY GC.Id ORDER BY R.RentedAt ASC) AS rn
                             FROM GameCopies AS GC
@@ -42,11 +43,12 @@ namespace Boardium.Controllers {
                             WHERE GC.GameId = {0} AND R.ReturnedAt IS NULL
                         )
                         SELECT 
-                            Id, 
-                            GameId, 
-                            Condition, 
+                            GameCopyID, 
+                            GameID, 
                             InventoryNumber, 
-                            RentedAt, 
+                            Condition, 
+                            RentalFee,
+                            BorrowDate, 
                             DueDate
                         FROM RankedRentals
                         WHERE rn = 1;

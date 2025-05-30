@@ -24,7 +24,7 @@ namespace Boardium.Models {
         public int GameID { get; set; }
         public string InventoryNumber { get; set; }
         public GameCondition Condition { get; set; }
-        public decimal? DamageFee { get; set; } = 0;
+        [Precision(10,2)]
         public decimal RentalFee { get; set; }
         public DateTime? BorrowDate { get; set; }
         public DateTime? DueDate { get; set; } 
