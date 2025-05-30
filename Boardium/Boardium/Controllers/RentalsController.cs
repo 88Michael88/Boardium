@@ -27,8 +27,8 @@ namespace Boardium.Controllers {
                        from rental in rentalGroup.DefaultIfEmpty() // LEFT JOIN
                        join gi in _context.GameImages on gc.GameId equals gi.GameId
                        where gc.GameId == GameID && gc.Id == GameCopyID 
-                       && gi.IsCoverImage
-                       && rental.RentedAt == null
+                       && gi.IsCoverImage == true
+                       && rental.ReturnedAt == null
                        select new GameAvailableCopyDetailsViewModel {
                                                                      GameCopyID = gc.Id,
                                                                        GameID = gc.GameId,
