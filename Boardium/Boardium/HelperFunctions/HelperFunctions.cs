@@ -6,7 +6,7 @@ namespace Boardium.HelperFuncs {
     public class HelperFunctions {
         public bool DateIsBetweenDates(DateTime date, BorrowInfo[] borrowInfo) {
             foreach (BorrowInfo borrowRow in borrowInfo) {
-                if (date <= borrowRow.DueDate.AddDays(1) && date >= borrowRow.BorrowDate.AddDays(-1)) {
+                if (date <= borrowRow.DueDate.AddDays(1) && date >= borrowRow.BorrowDate) {
                     return true;
                 }
             }
