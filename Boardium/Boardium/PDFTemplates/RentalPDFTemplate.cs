@@ -1,6 +1,10 @@
-﻿namespace Boardium.PDFTemplates {
+﻿using Boardium.Services;
+
+namespace Boardium.PDFTemplates {
     public class RentalPDFTemplate {
+        QrCodeService qrCodeService = new QrCodeService();
         public string? getHTMLRentalPDFTemplate(string InternalCode, string GameTitle, int PickupCode) {
+            string qrCodeData = qrCodeService.GenerateQrCodeBase64(PickupCode.ToString());
             return $@"
                     <!DOCTYPE html>
                     <html>
@@ -29,13 +33,12 @@
                             .label {{
                                 font-weight: bold;
                             }}
+                            .qr img {{
+                                max-width: 200px;
+                            }}
                         </style>
                     </head>
                     <body>
-                        <div class=""container"">
-                            <h1>QR Code</h1>
-                        </div>
-
                         <div class=""container"">
                             <h1>Rental Confirmation</h1>
                     
@@ -50,7 +53,13 @@
                             </div>
                     
                             <p>Thank you for renting from <strong>Boardium</strong>!</p>
+
+                            <div class=""qr"">
+                                <h2>QR Code</h2>
+                                <img src=""data:image/png;base64,{qrCodeData}"" alt=""QR Code"" />
+                            </div>
                         </div>
+
                     </body>
                     </html>
                     ";
