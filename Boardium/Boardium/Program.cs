@@ -6,6 +6,7 @@ using Boardium.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using System.Reflection;
+using Boardium.HelperFuncs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,6 +19,7 @@ builder.Services.AddScoped<UserMapper>();
 builder.Services.AddScoped<RentalMapper>();
 builder.Services.AddTransient<EmailTemplateRenderer>();
 builder.Services.AddTransient<QrCodeService>();
+builder.Services.AddTransient<HelperFunctions>();
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddAuthentication();

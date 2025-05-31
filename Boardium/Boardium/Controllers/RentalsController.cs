@@ -4,24 +4,22 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Boardium.Data;
 using System.Security.Claims;
-using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
-using Microsoft.VisualBasic;
-using Microsoft.AspNetCore.Identity;
-using System.Text;
-using System.Security.Cryptography;
+using Boardium.HelperFuncs;
 
 namespace Boardium.Controllers {
     public class RentalsController : Controller {
         private readonly BoardiumContext _context;
         private readonly ILogger<GamesController> _logger;
-        public RentalsController(BoardiumContext context, ILogger<GamesController> logger)
+        private HelperFunctions _helperFunction;
+        public RentalsController(BoardiumContext context, ILogger<GamesController> logger, HelperFunctions helperFunctions)
         {
             _context = context;
             _logger = logger;
+            _helperFunction = helperFunctions;
         }
 
-        [HttpGet("Rentals/Index")]
+        [HttpGet("Rentals/")]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Index(int GameID, int GameCopyID) {
             GameAvailableCopyDetailsViewModel? gameCopyDetail =
@@ -87,7 +85,7 @@ namespace Boardium.Controllers {
                                           ).ToArrayAsync();
 
             if (gameBorrowInfo != null) { // Thorough Date confirmation
-                if (dateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || dateIsBetweenDates(DesiredDueDate, gameBorrowInfo))  {
+                if (_helperFunction.DateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || _helperFunction.DateIsBetweenDates(DesiredDueDate, gameBorrowInfo))  {
                     return RedirectToAction(nameof(Index), new { GameID = GameID, GameCopyID = GameCopyID });
                 }
             }
@@ -105,7 +103,7 @@ namespace Boardium.Controllers {
                 LateFee = 0,
                 DamageFee = 0,
                 PaidFee = 0,
-                PickupCode = generateCode(userId, DateTime.Now, GameCopyID)
+                PickupCode = _helperFunction.GenerateCode(userId, DateTime.Now, GameCopyID)
             };
 
             _context.Rentals.Add(newRental);
@@ -116,33 +114,6 @@ namespace Boardium.Controllers {
             // Is there a transaction made automatically, so that a different user can't rent a board game at the same time?
 
             return View(newRental);
-        }
-
-        private bool dateIsBetweenDates(DateTime date, BorrowInfo[] borrowInfo) {
-            foreach (BorrowInfo borrowRow in borrowInfo) {
-                if (date <= borrowRow.DueDate.AddDays(1) && date >= borrowRow.BorrowDate.AddDays(-1)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        private int generateCode(string username, DateTime dateTime, int gameCopyID) {
-            string combined = $"{username}-{dateTime:yyyyMMddHHmmss}-{gameCopyID}";
-
-            using (SHA256 sha256 = SHA256.Create()) {
-                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
-
-                int hashNumber = (int)BitConverter.ToUInt64(hashBytes, 0);
-
-                int codeNumber = Math.Abs(hashNumber % 100_000_000);
-
-                if (codeNumber < 10_000_000) {
-                    codeNumber += 10_000_000;
-                }
-
-                return codeNumber;
-            }
         }
 
         [Authorize]

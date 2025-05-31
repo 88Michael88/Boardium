@@ -1,11 +1,16 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Boardium", "Boardium\Boardium.csproj", "{2CE491CF-573E-4C68-BAC9-B3544E35F415}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{CDA8AEAB-A1EA-4F9C-BB47-5AD40D718F3B}"
 	ProjectSection(SolutionItems) = preProject
 		compose.yaml = compose.yaml
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BasicUnitTests", "BasicUnitTests\BasicUnitTests.csproj", "{D08326C7-2EEC-4FEB-9250-324C8E0272E9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,5 +22,12 @@ Global
 		{2CE491CF-573E-4C68-BAC9-B3544E35F415}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2CE491CF-573E-4C68-BAC9-B3544E35F415}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2CE491CF-573E-4C68-BAC9-B3544E35F415}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D08326C7-2EEC-4FEB-9250-324C8E0272E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D08326C7-2EEC-4FEB-9250-324C8E0272E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D08326C7-2EEC-4FEB-9250-324C8E0272E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D08326C7-2EEC-4FEB-9250-324C8E0272E9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
 	EndGlobalSection
 EndGlobal
