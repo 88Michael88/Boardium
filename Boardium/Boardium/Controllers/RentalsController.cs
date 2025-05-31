@@ -6,17 +6,20 @@ using Boardium.Data;
 using System.Security.Claims;
 using Boardium.Models.Rental;
 using Boardium.HelperFuncs;
+using DinkToPdf.Contracts;
+using DinkToPdf;
 
 namespace Boardium.Controllers {
     public class RentalsController : Controller {
         private readonly BoardiumContext _context;
         private readonly ILogger<GamesController> _logger;
         private HelperFunctions _helperFunction;
-        public RentalsController(BoardiumContext context, ILogger<GamesController> logger, HelperFunctions helperFunctions)
-        {
+        private readonly IConverter _converter;
+        public RentalsController(BoardiumContext context, ILogger<GamesController> logger, HelperFunctions helperFunctions, IConverter converter) {
             _context = context;
             _logger = logger;
             _helperFunction = helperFunctions;
+            _converter = converter;
         }
 
         [HttpGet("Rentals/")]
@@ -140,6 +143,39 @@ namespace Boardium.Controllers {
                                 ).ToListAsync();
 
             return View(rentals);
+        }
+        private string? getHTMLContent(int PickupCode) {
+            return $@"
+                              <html>
+                              <head><style>body {{ font-family: Arial; }}</style></head>
+                              <body>
+                                  <h1>Rental Confirmation</h1>
+                                  <p>Baby it is PDF TIME</p>
+                                  <p>Pickup Code: {PickupCode}</p>
+                                  <p>Thank you for renting from Boardium!</p>
+                              </body>
+                              </html>";
+
+        }
+
+        public IActionResult DownloadPDF(int PickupCode) {
+            var htmlContent = getHTMLContent(PickupCode);
+
+            var doc = new HtmlToPdfDocument() {
+                GlobalSettings = {
+                    PaperSize = PaperKind.A5,
+                    Orientation = Orientation.Portrait
+                },
+                Objects = {
+                    new ObjectSettings() {
+                        HtmlContent = htmlContent
+                    }
+                }
+            };
+
+            var pdf = _converter.Convert(doc);
+
+            return File(pdf, "application/pdf", $"Rental_{PickupCode}.pdf");
         }
 
     }

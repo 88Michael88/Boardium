@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="DinkToPdf" Version="1.0.8" />
       <PackageReference Include="MailKit" Version="4.12.1" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.5" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.5" />
