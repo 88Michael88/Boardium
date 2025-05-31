@@ -80,7 +80,7 @@ namespace Boardium.Controllers {
             return View(model);
         }
 
-        [HttpGet("Index")]
+        [HttpGet("Index/")]
         public async Task<IActionResult> Index(int? page) {
             int pageSize = 10;
             int currentPage = page ?? 1;

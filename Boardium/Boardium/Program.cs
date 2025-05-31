@@ -39,7 +39,7 @@ if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI(c => {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Boardium API V1");
-        c.RoutePrefix = "swagger"; // Optional: access at /swagger
+        c.RoutePrefix = "swagger"; 
     });
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
