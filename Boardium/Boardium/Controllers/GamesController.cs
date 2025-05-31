@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Boardium.Models.Game;
 
 namespace Boardium.Controllers {
-    [Route("Games")]
     public class GamesController : Controller {
         private readonly BoardiumContext _context;
         private readonly ILogger<GamesController> _logger;
@@ -16,7 +15,7 @@ namespace Boardium.Controllers {
             _logger = logger;
         }
 
-        [HttpGet("BoardGame")]
+        [HttpGet("Games/BoardGame")]
         public async Task<IActionResult> BoardGame(int? gameIndex) {
             if (gameIndex == null) return NotFound(); 
 
@@ -80,7 +79,7 @@ namespace Boardium.Controllers {
             return View(model);
         }
 
-        [HttpGet("Index/")]
+        [HttpGet("Games/")]
         public async Task<IActionResult> Index(int? page) {
             int pageSize = 10;
             int currentPage = page ?? 1;

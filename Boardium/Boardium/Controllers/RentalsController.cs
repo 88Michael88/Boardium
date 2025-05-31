@@ -8,9 +8,10 @@ using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
 using Microsoft.VisualBasic;
 using Microsoft.AspNetCore.Identity;
+using System.Text;
+using System.Security.Cryptography;
 
 namespace Boardium.Controllers {
-    [Route("Rentals")]
     public class RentalsController : Controller {
         private readonly BoardiumContext _context;
         private readonly ILogger<GamesController> _logger;
@@ -20,7 +21,7 @@ namespace Boardium.Controllers {
             _logger = logger;
         }
 
-        [HttpGet("Index")]
+        [HttpGet("Rentals/Index")]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Index(int GameID, int GameCopyID) {
             GameAvailableCopyDetailsViewModel? gameCopyDetail =
@@ -61,7 +62,7 @@ namespace Boardium.Controllers {
             return View(gameCopyDetail);
         }
 
-        [HttpPost("Confirm")]
+        [HttpPost("Rentals/Confirm")]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Confirm(int GameID, int GameCopyID, DateTime DesiredBorrowDate, DateTime DesiredDueDate) {
             if (DesiredBorrowDate < DateTime.Now.Date || DesiredDueDate < DateTime.Now || DesiredDueDate < DesiredBorrowDate) // Basic Date confirmation.
@@ -103,7 +104,8 @@ namespace Boardium.Controllers {
                 RentalFee = rentalFee,
                 LateFee = 0,
                 DamageFee = 0,
-                PaidFee = 0
+                PaidFee = 0,
+                PickupCode = generateCode(userId, DateTime.Now, GameCopyID)
             };
 
             _context.Rentals.Add(newRental);
@@ -125,8 +127,26 @@ namespace Boardium.Controllers {
             return false;
         }
 
+        private int generateCode(string username, DateTime dateTime, int gameCopyID) {
+            string combined = $"{username}-{dateTime:yyyyMMddHHmmss}-{gameCopyID}";
+
+            using (SHA256 sha256 = SHA256.Create()) {
+                byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(combined));
+
+                int hashNumber = (int)BitConverter.ToUInt64(hashBytes, 0);
+
+                int codeNumber = Math.Abs(hashNumber % 100_000_000);
+
+                if (codeNumber < 10_000_000) {
+                    codeNumber += 10_000_000;
+                }
+
+                return codeNumber;
+            }
+        }
+
         [Authorize]
-        [HttpGet("MyRentals")]
+        [HttpGet("Rentals/MyRentals")]
         public async Task<IActionResult> MyRentals() {
             string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var rentals = await (from r in _context.Rentals
