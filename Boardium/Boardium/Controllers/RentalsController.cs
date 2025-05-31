@@ -8,6 +8,7 @@ using Boardium.Models.Rental;
 using Boardium.HelperFuncs;
 using DinkToPdf.Contracts;
 using DinkToPdf;
+using Boardium.PDFTemplates;
 
 namespace Boardium.Controllers {
     public class RentalsController : Controller {
@@ -144,22 +145,27 @@ namespace Boardium.Controllers {
 
             return View(rentals);
         }
-        private string? getHTMLContent(int PickupCode) {
-            return $@"
-                              <html>
-                              <head><style>body {{ font-family: Arial; }}</style></head>
-                              <body>
-                                  <h1>Rental Confirmation</h1>
-                                  <p>Baby it is PDF TIME</p>
-                                  <p>Pickup Code: {PickupCode}</p>
-                                  <p>Thank you for renting from Boardium!</p>
-                              </body>
-                              </html>";
 
-        }
+        public async Task<IActionResult> DownloadPDF(int PickupCode) {
+            RentalPDFTemplate rentalPDFTemplate = new RentalPDFTemplate();
+            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        public IActionResult DownloadPDF(int PickupCode) {
-            var htmlContent = getHTMLContent(PickupCode);
+            PDFDataModel? pdfDataModel = await (from r in _context.Rentals
+                                               join gc in _context.GameCopies on r.GameCopyId equals gc.Id
+                                               join g in _context.Games on gc.GameId equals g.Id
+                                               where r.ApplicationUserId == userId
+                                               && r.PickupCode == PickupCode
+                                               select new PDFDataModel {
+                                                   InventoryNumber = gc.InventoryNumber,
+                                                   GameTitle = g.Title,
+                                                   PickupCode = r.PickupCode
+                                               }
+                                              ).FirstOrDefaultAsync();
+                
+
+            if (pdfDataModel == null) return NotFound();
+
+            var htmlContent = rentalPDFTemplate.getHTMLRentalPDFTemplate(pdfDataModel.InventoryNumber, pdfDataModel.GameTitle, pdfDataModel.PickupCode);
 
             var doc = new HtmlToPdfDocument() {
                 GlobalSettings = {
