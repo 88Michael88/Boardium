@@ -1,3 +1,4 @@
+using Boardium.Models;
 using Boardium.Models.Auth;
 using Boardium.Models.Game;
 using Boardium.Models.Inventory;

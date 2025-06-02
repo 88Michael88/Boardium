@@ -27,7 +27,7 @@ public class EmailTemplateRenderer
         {
             content = content.Replace($"{{{{{key}}}}}", value);
         }
-        _logger.LogInformation(content);
+        _logger.LogInformation("Email Template renered successfully: {TemplateName}", templateName);
         return content;
     }
 }
