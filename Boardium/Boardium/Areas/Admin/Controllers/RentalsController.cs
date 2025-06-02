@@ -291,7 +291,7 @@ namespace Boardium.Areas.Admin.Controllers
                     }
                 }
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(Index), "Rentals", new { area = "Admin" });;
             }
 
             ViewData["ApplicationUserId"] = new SelectList(_context.Users, "Id", "Id", rental.ApplicationUserId);
