@@ -1,0 +1,60 @@
+@model int?
+@{
+    ViewData["Title"] = "Pickup";
+}
+<h1>@ViewData["Title"]</h1>
+
+<div class="container d-flex justify-content-center align-items-center ">
+    <div class="card shadow-lg p-4" style="max-width: 500px; width: 100%;">
+        <h2 class="text-center mb-4">Pickup</h2>
+
+        <form asp-controller="Rentals" asp-action="Pickup" method="get">
+            <div class="mb-3">
+                <label for="pickupCode" class="form-label">Pickup code (enter or scan QR code):</label>
+                <input type="number" id="pickupCode" name="pickupCode" value="@Model" class="form-control" required />
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <button type="button" class="btn btn-secondary" onclick="startScanner()">Scan QR</button>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </div>
+
+            <div id="qr-reader" class="border rounded mt-4 p-2" style="width: 100%; display:none;"></div>
+
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger mt-3">@ViewBag.Error</div>
+            }
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script>
+        function startScanner() {
+            document.getElementById("qr-reader").style.display = "block";
+
+            const qrCodeScanner = new Html5Qrcode("qr-reader");
+            qrCodeScanner.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: 250
+                },
+                qrCodeMessage => {
+                    document.getElementById("pickupCode").value = qrCodeMessage;
+                    qrCodeScanner.stop().then(() => {
+                        document.getElementById("qr-reader").style.display = "none";
+                        //document.querySelector("form").submit();
+                    });
+                },
+                errorMessage => {
+                    
+                }
+            ).catch(err => {
+                console.error("Nie można uruchomić skanera:", err);
+            });
+        }
+    </script>
+}

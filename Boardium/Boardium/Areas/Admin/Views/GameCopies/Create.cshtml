@@ -1,0 +1,45 @@
+@model Boardium.Models.Inventory.GameCopy
+
+@{
+    ViewData["Title"] = "Create";
+}
+
+<h1>Create</h1>
+
+<h4>GameCopy</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="GameId" class="control-label"></label>
+                <select asp-for="GameId" class ="form-control" asp-items="ViewBag.GameId"></select>
+            </div>
+        
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="IsAvailable" /> @Html.DisplayNameFor(model => model.IsAvailable)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="Condition" class="control-label"></label>
+                <select asp-for="Condition" class="form-control" asp-items="ViewBag.Condition"></select>
+                <span asp-validation-for="Condition" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RentalFee" class="control-label"></label>
+                <input asp-for="RentalFee" class="form-control" />
+                <span asp-validation-for="RentalFee" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Create" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
