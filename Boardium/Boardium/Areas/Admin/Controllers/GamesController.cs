@@ -41,8 +41,6 @@ namespace Boardium.Admin.Controllers
         // GET: Games
         public async Task<IActionResult> Index()
         {
-            _logger.LogInformation("Getting all Games");
-            _logger.LogError("This is an error log example");
             var boardiumContext = _context.Games.Include(g => g.Publisher).Include(g => g.Categories);
             return View(await boardiumContext.ToListAsync());
         }
@@ -222,7 +220,6 @@ namespace Boardium.Admin.Controllers
             }
         }
 
-        
 
         public async Task GenerateThumbnailAsync(string originalPath, string thumbnailPath, int width = 250)
         {
@@ -234,6 +231,7 @@ namespace Boardium.Admin.Controllers
             }));
             await image.SaveAsync(thumbnailPath);
         }
+
         private async Task SaveUploadedImagesAsync(Game game, IEnumerable<IFormFile>? uploadedImages)
         {
             var formFiles = uploadedImages.ToList();
@@ -252,13 +250,14 @@ namespace Boardium.Admin.Controllers
 
                 var fileName = $"{Guid.NewGuid()}{extension}";
                 var filePath = Path.Combine(gameFolder, fileName).Replace("\\", "/");
-                var thumbnailPath  = Path.Combine(lowResFolder, fileName).Replace("\\", "/");
+                var thumbnailPath = Path.Combine(lowResFolder, fileName).Replace("\\", "/");
                 try
                 {
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
                     }
+
                     await GenerateThumbnailAsync(filePath, thumbnailPath);
                     game.Images.Add(new GameImage
                     {
@@ -270,7 +269,6 @@ namespace Boardium.Admin.Controllers
                 {
                     _logger.Log(LogLevel.Error, ex, "Error writing image to images folder");
                 }
-                
             }
         }
 
