@@ -1,11 +1,15 @@
+using Boardium.Models;
+using Boardium.Models.Auth;
 using Boardium.Models.Game;
 using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
+
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Boardium.Data;
 
-public class BoardiumContext : DbContext
+public class BoardiumContext : IdentityDbContext<ApplicationUser>
 {
     public BoardiumContext(DbContextOptions<BoardiumContext> options) : base(options)
     {
@@ -16,10 +20,14 @@ public class BoardiumContext : DbContext
     public DbSet<Models.Game.GameCategory> GameCategories { get; set; }
     public DbSet<Models.Rental.Rental> Rentals { get; set; }
     public DbSet<Models.Inventory.GameCopy> GameCopies { get; set; }
+    public DbSet<Models.Game.GameImage> GameImages { get; set; }
+    public DbSet<Models.GameAvailableCopy> GameAvailableCopies { get; set; }
     
+    public DbSet<ApplicationUser> ApplicationUsers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Models.Game.Game>()
             .HasOne(g => g.Publisher)
             .WithMany(p => p.Games)
@@ -28,6 +36,9 @@ public class BoardiumContext : DbContext
         modelBuilder.Entity<Game>()
             .HasMany(g => g.Categories)
             .WithMany(gc => gc.Games);
+        modelBuilder.Entity<Game>()
+            .HasMany(g => g.Images)
+            .WithOne(gi => gi.Game);
         modelBuilder.Entity<Rental>()
             .HasOne(r => r.ApplicationUser)
             .WithMany(u => u.Rentals)
@@ -43,7 +54,8 @@ public class BoardiumContext : DbContext
             .WithMany(g=>g.GameCopies)
             .HasForeignKey(gc=>gc.GameId)
             .OnDelete(DeleteBehavior.Cascade);
-            
-
+        modelBuilder.Entity<GameAvailableCopy>()
+            .HasNoKey();
+        
     }
 }

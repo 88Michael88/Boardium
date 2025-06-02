@@ -1,0 +1,44 @@
+@model RentalProcessIndexViewModel
+@using Boardium.Models.Rental
+
+<form method="get" class="mb-3">
+    <label for="statusFilter" class="form-label">Filter by Status:</label>
+    <select id="statusFilter" name="status" class="form-select" onchange="this.form.submit()">
+        <option value="">-- All Statuses --</option>
+        @foreach (var statusName in Enum.GetNames(typeof(RentalStatus)))
+        {
+            var statusValue = (int)Enum.Parse(typeof(RentalStatus), statusName);
+            <option value="@statusValue" selected="@(Model.SelectedStatus == statusValue ? "selected" : null)">
+                @statusName
+            </option>
+        }
+    </select>
+</form>
+
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Game Title</th>
+        <th>Inventory #</th>
+        <th>Customer Email</th>
+        <th>Status</th>
+        <th>Rented At</th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var rental in Model.Rentals)
+    {
+        <tr>
+            <td>@rental.GameTitle</td>
+            <td>@rental.InventoryNumber</td>
+            <td>@rental.CustomerEmail</td>
+            <td>@rental.Status</td>
+            <td>@rental.RentedAt.ToString("yyyy-MM-dd HH:mm")</td>
+            <td>
+                <a asp-area="Admin" asp-controller="Rentals" asp-action="Process" asp-route-id="@rental.Id" class="btn btn-sm btn-primary">Process</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>

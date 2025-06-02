@@ -1,0 +1,111 @@
+﻿@model Boardium.Models.GameAvailableCopyDetailsViewModel;
+@{
+    ViewData["Title"] = "Rent Board Game";
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <!-- Image Section -->
+        <div class="col-md-3">
+            <img src="@Url.Content($"~/pictures/{Model.GameID}/lowres/{Model.PathToImage}")" class="img-thumbnail" style="width: 250px; height: 250px;" alt="Game image" />
+        </div>
+
+        <!-- Game Info Section -->
+        <div class="col-md-9">
+            <h2>@Model.Title</h2>
+            <table class="table table-borderless">
+                <tr><th>Condition:</th><td>@Model.Condition</td></tr>
+                <tr><th>Inventory Number:</th><td>@Model.InventoryNumber</td></tr>
+                <tr><th>Rental Fee:</th><td>@Model.RentalFee.ToString("C")</td></tr>
+                @{
+                    var now = DateTime.Now;
+                    if (@Model.BorrowDate > now) {
+						// <td>Available before @Model.BorrowDate?.ToString("dd MMMM yyyy")</td>
+						<tr><th>Must Be Returned Before</th><td>@(Model.BorrowDate?.AddDays(-1).ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
+					} else if (@Model.DueDate > now) {
+						// <td>Available after @Model.DueDate?.ToString("dd MMMM yyyy")</td>
+						<tr><th>Is Available After</th><td>@(Model.DueDate?.AddDays(1).ToString("dd MMMM yyyy") ?? "Available Now")</td></tr>
+					} else {
+						<tr><th>Status</th><td>Available Now</td></tr>
+						// <td>Available</td>
+					}
+				}
+			</table>
+		</div>
+	</div>
+
+	<hr />
+
+    <!-- Future Borrows Table -->
+    <h4>Current Reservations</h4>
+    @if (Model.CurrentBorrows.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Rent Date</th>
+                    <th>Due Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var borrow in Model.CurrentBorrows)
+                {
+                    <tr>
+                        <td>@borrow.BorrowDate.ToString("dd MMMM yyyy")</td>
+                        <td>@borrow.DueDate.AddDays(1).ToString("dd MMMM yyyy")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-muted">No future reservations.</p>
+    }
+    <!-- Desired Borrow Date Input -->
+    <div class="form-group mt-4">
+        <label for="borrowDueDate" class="form-label">Select your desired borrow date:</label>
+        <input type="date" class="form-control" id="borrowDueDate" name="borrowDueDate" required />
+    </div>
+
+    <!-- Desired Return Date Input -->
+    <div class="form-group mt-4">
+        <label for="desiredDueDate" class="form-label">Select your desired return date:</label>
+        <input type="date" class="form-control" id="desiredDueDate" name="desiredDueDate" required />
+    </div>
+
+    <!-- Rent Button Form -->
+    <form asp-controller="Rentals" asp-action="Confirm" method="post" class="mt-4">
+        <input type="hidden" name="GameID" value="@Model.GameID" />
+        <input type="hidden" name="GameCopyID" value="@Model.GameCopyID" />
+        <input type="hidden" name="DesiredDueDate" id="hiddenDueDate" />
+        <input type="hidden" name="DesiredBorrowDate" id="hiddenBorrowDate" />
+
+        <button id="rentButton" type="submit" class="btn btn-danger btn-lg w-100" disabled>
+            Save and Rent the Board Game
+        </button>
+    </form>
+
+	<script>
+		const borrowDateInput = document.getElementById("borrowDueDate");
+		const returnDateInput = document.getElementById("desiredDueDate");
+		const rentButton = document.getElementById("rentButton");
+		const hiddenDueDate = document.getElementById("hiddenDueDate");
+		const hiddenBorrowDate = document.getElementById("hiddenBorrowDate");
+
+		function validateDates() {
+			const borrowDate = new Date(borrowDateInput.value);
+			const returnDate = new Date(returnDateInput.value);
+
+			const validDates = borrowDateInput.value && returnDateInput.value && returnDate > borrowDate;
+
+			hiddenBorrowDate.value = borrowDateInput.value;
+			hiddenDueDate.value = returnDateInput.value;
+
+			rentButton.disabled = !validDates;
+		}
+
+		borrowDateInput.addEventListener("input", validateDates);
+		returnDateInput.addEventListener("input", validateDates);
+	</script>
+</div>

@@ -5,6 +5,8 @@
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>
@@ -14,14 +16,47 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="DinkToPdf" Version="1.0.8" />
+      <PackageReference Include="MailKit" Version="4.12.1" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.5" />
       <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.5" />
       <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.5" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.5" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.5" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.5">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
+      <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration" Version="9.0.0" />
+      <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+      <PackageReference Include="QRCoder" Version="1.6.0" />
+      <PackageReference Include="Riok.Mapperly" Version="4.2.1" />
+      <PackageReference Include="SixLabors.ImageSharp" Version="3.1.8" />
+      <PackageReference Include="SkiaSharp" Version="3.119.0" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.2" />
+      <PackageReference Include="ZXing.Net" Version="0.16.10" />
+      <PackageReference Include="ZXing.Net.Bindings.SkiaSharp" Version="0.16.21" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Views\Games\Create.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Games\Delete.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Games\Details.cshtml" />
+      <_ContentIncludedByDefault Remove="Views\Games\Edit.cshtml" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Create.cshtml" />
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Delete.cshtml" />
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Details.cshtml" />
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Edit.cshtml" />
+      <AdditionalFiles Include="Areas\Admin\Views\Games\Index.cshtml" />
+      <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="wwwroot\pictures\2\" />
+      <Folder Include="wwwroot\pictures\4\" />
     </ItemGroup>
 
 </Project>

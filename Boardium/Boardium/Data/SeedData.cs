@@ -4,149 +4,221 @@ using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Mono.TextTemplating;
 
 namespace Boardium.Data;
 
-public static class SeedData
+public class SeedData
 {
-    public static async Task InitializeAsync(IServiceProvider serviceProvider)
+    private readonly BoardiumContext _context;
+    private readonly UserManager<ApplicationUser> _userManager;
+    private readonly RoleManager<IdentityRole> _roleManager;
+    private readonly ILogger<SeedData> _logger;
+    public SeedData(BoardiumContext context,
+        UserManager<ApplicationUser> userManager,
+        RoleManager<IdentityRole> roleManager,
+        ILogger<SeedData> logger)
     {
-        using var scope = serviceProvider.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<BoardiumContext>();
-        var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+        _context = context;
+        _userManager = userManager;
+        _roleManager = roleManager;
+        _logger = logger;
+    }
+    public  async Task InitializeAsync()
+    {
+        _context.Database.Migrate();
 
-        context.Database.Migrate();
-
-        //seeding Game Categories 
-        if (!context.GameCategories.Any())
+        //Seeding Game Categories 
+        if (!_context.GameCategories.Any())
         {
-            context.GameCategories.AddRange(
+            _context.GameCategories.AddRange(
                 new GameCategory { Name = "Karcianka" },
                 new GameCategory { Name = "Strategia" },
                 new GameCategory { Name = "Rodzinna" }
             );
-            context.SaveChanges();
+            _context.SaveChanges();
         }
 
-        //seeding Publishers
-        if (!context.Publishers.Any())
+        //Seeding Publishers
+        if (!_context.Publishers.Any())
         {
-            context.Publishers.AddRange(
+            _context.Publishers.AddRange(
                 new Publisher { Name = "Rebel", Website = "https://www.rebel.pl" },
                 new Publisher { Name = "Galakta", Website = "https://www.galakta.pl" },
+                new Publisher { Name = "Portal Games", Website = "https://portalgames.pl" },
+                new Publisher { Name = "Lucky Duck Games", Website = "https://luckyduckgames.com" },
                 new Publisher { Name = "Catan Studio", Website = "https://www.catanstudio.com" }
             );
-            context.SaveChanges();
+            _context.SaveChanges();
         }
 
-        //seeding Games
-        if (!context.Games.Any())
+        //Seeding Games
+        if (!_context.Games.Any())
         {
-            var publisher = context.Publishers.First();
-            var game = new Game
-            {
+            var catanStudio = _context.Publishers.First(p => p.Name == "Catan Studio");
+            var portalGames = _context.Publishers.First(p => p.Name == "Portal Games");
+            var rebel = _context.Publishers.First(p => p.Name == "Rebel");
+
+            var catanImage = new GameImage { ImagePath = "Catan_Example_Game.jpg", IsCoverImage = true };
+            var catanGameplayImage = new GameImage { ImagePath = "Catan_Gameplay.jpg", IsCoverImage = false };
+            var catanGameplay2Image = new GameImage { ImagePath = "Catan_Gameplay2.jpg", IsCoverImage = false };
+            var catanBoardImage = new GameImage { ImagePath = "Catan_Board.jpg", IsCoverImage = false };
+            var detImage = new GameImage { ImagePath = "Detektyw_Example.jpg", IsCoverImage = true };
+            var dixitImage = new GameImage { ImagePath = "Dixit_Example.jpg", IsCoverImage = true };
+
+            _context.GameImages.AddRange(catanImage, detImage, dixitImage);
+
+            var catan = new Game {
                 Title = "Catan",
                 Description = "Gra planszowa, w której gracze rywalizują o zasoby i budują osady.",
+                Images = new List<GameImage> { catanImage, catanGameplayImage, catanGameplay2Image, catanBoardImage },
                 MinPlayers = 3,
                 MaxPlayers = 4,
                 MinAge = 10,
                 MaxAge = 99,
                 PlayingTimeMinutes = 90,
-                PublisherId = publisher.Id,
-                Categories = new List<GameCategory>
-                {
-                    context.GameCategories.First(g => g.Name == "Strategia"),
-                    context.GameCategories.First(g => g.Name == "Rodzinna")
+                PublisherId = catanStudio.Id,
+                Categories = new List<GameCategory> {
+                    _context.GameCategories.First(g => g.Name == "Strategia"),
+                    _context.GameCategories.First(g => g.Name == "Rodzinna")
                 }
             };
-            context.Games.Add(game);
-            context.SaveChanges();
+
+            var detective = new Game {
+                Title = "Detektyw",
+                Description = "Wciel się w rolę detektywa i rozwiąż zagadki kryminalne.",
+                Images = new List<GameImage> { detImage },
+                MinPlayers = 1,
+                MaxPlayers = 5,
+                MinAge = 16,
+                MaxAge = 99,
+                PlayingTimeMinutes = 120,
+                PublisherId = portalGames.Id,
+                Categories = new List<GameCategory> {
+                    _context.GameCategories.First(g => g.Name == "Strategia"),
+                    _context.GameCategories.First(g => g.Name == "Rodzinna")
+                }
+            };
+
+            var dixit = new Game {
+                Title = "Dixit",
+                Description = "Gra skojarzeń z pięknie ilustrowanymi kartami.",
+                Images = new List<GameImage> { dixitImage },
+                MinPlayers = 3,
+                MaxPlayers = 6,
+                MinAge = 8,
+                MaxAge = 99,
+                PlayingTimeMinutes = 30,
+                PublisherId = rebel.Id,
+                Categories = new List<GameCategory> {
+                    _context.GameCategories.First(g => g.Name == "Rodzinna"),
+                }
+            };
+
+            _context.Games.AddRange(catan, detective, dixit);
+            _context.SaveChanges();
         }
 
-        //seeding Roles
+        //Seeding Roles
         string[] roles = { "Admin", "User" };
         foreach (var role in roles)
         {
-            if (!await roleManager.RoleExistsAsync(role))
+            if (!await _roleManager.RoleExistsAsync(role))
             {
-                await roleManager.CreateAsync(new IdentityRole(role));
+                await _roleManager.CreateAsync(new IdentityRole(role));
             }
         }
 
         //Seed admin user
         var adminEmail = "admin@boardium.pl";
-        var adminUser = await userManager.FindByEmailAsync(adminEmail);
+        var adminUser = await _userManager.FindByEmailAsync(adminEmail);
         if (adminUser == null)
         {
             adminUser = new ApplicationUser
             {
-                UserName = "admin",
+                UserName = adminEmail,
                 Email = adminEmail,
                 EmailConfirmed = true,
                 FirstName = "Admin",
                 LastName = "Admin"
             };
-            var result = await userManager.CreateAsync(adminUser, "Admin123!");
+            var result = await _userManager.CreateAsync(adminUser, "Admin123!");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(adminUser, "Admin");
+                await _userManager.AddToRoleAsync(adminUser, "Admin");
             }
         }
 
         //Seed regular user
         var userEmail = "user@boardium.pl";
-        var regularUser = await userManager.FindByEmailAsync(userEmail);
+        var regularUser = await _userManager.FindByEmailAsync(userEmail);
         if (regularUser == null)
         {
             regularUser = new ApplicationUser
             {
-                UserName = "user",
+                UserName = userEmail,
                 Email = userEmail,
                 EmailConfirmed = true,
                 FirstName = "User",
                 LastName = "User"
             };
-            var result = await userManager.CreateAsync(regularUser, "User123!");
+            var result = await _userManager.CreateAsync(regularUser, "User123!");
             if (result.Succeeded)
             {
-                await userManager.AddToRoleAsync(regularUser, "User");
+                await _userManager.AddToRoleAsync(regularUser, "User");
             }
         }
 
         //Seed Game Copies
-        if (!context.Games.Any())
+        if (!_context.GameCopies.Any())
         {
-            var game = context.Games.First();
-            context.GameCopies.AddRange(
-                new GameCopy
-                {
-                    GameId = game.Id,
+            var catan = _context.Games.First(g => g.Title == "Catan");
+            var detective = _context.Games.First(g => g.Title == "Detektyw");
+            var dixit = _context.Games.First(g => g.Title == "Dixit");
+            // Catan
+            _context.GameCopies.AddRange(
+                new GameCopy {
+                    GameId = catan.Id,
                     Condition = GameCondition.Good,
                     IsAvailable = true,
                     RentalFee = 10.00m,
                     InventoryNumber = "Cat-001"
                 },
-                new GameCopy
-                {
-                    GameId = game.Id,
+                new GameCopy {
+                    GameId = catan.Id,
                     Condition = GameCondition.Used,
                     IsAvailable = true,
                     RentalFee = 8.00m,
                     InventoryNumber = "Cat-002"
+                },
+                // Detektyw
+                new GameCopy {
+                    GameId = detective.Id,
+                    Condition = GameCondition.Good,
+                    IsAvailable = true,
+                    RentalFee = 12.00m,
+                    InventoryNumber = "Det-001"
+                },
+                // Dixit
+                new GameCopy {
+                    GameId = dixit.Id,
+                    Condition = GameCondition.Good,
+                    IsAvailable = true,
+                    RentalFee = 9.00m,
+                    InventoryNumber = "Dix-001"
                 }
             );
-            context.SaveChanges();
+            _context.SaveChanges();
         }
 
         //Seed Rentals
-        if (!context.Rentals.Any())
+        if (!_context.Rentals.Any())
         {
-            var gameCopy = context.GameCopies.First();
-            var user = await userManager.FindByEmailAsync(userEmail);
+            var gameCopy = _context.GameCopies.First();
+            var user = await _userManager.FindByEmailAsync(userEmail);
             if (user != null && gameCopy != null)
             {
-                context.Rentals.Add(new Rental
+                _context.Rentals.Add(new Rental
                 {
                     GameCopyId = gameCopy.Id,
                     ApplicationUserId = user.Id,
@@ -158,8 +230,8 @@ public static class SeedData
                     PaidFee = gameCopy.RentalFee,
                 });
             }
-
-            context.SaveChanges();
+            _context.SaveChanges();
         }
+        _logger.Log(LogLevel.Information, "Seeding data finished");
     }
 }

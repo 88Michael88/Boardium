@@ -1,0 +1,54 @@
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model Boardium.Areas.Admin.Models.EditUserViewModel
+@{
+    ViewData["Title"] = "Edytuj użytkownika";
+}
+
+<h1 class="mb-4">Edytuj użytkownika</h1>
+
+<form asp-action="Edit" class="needs-validation" novalidate>
+    <input type="hidden" asp-for="Id" />
+
+    <div class="form-group">
+        <label asp-for="Email"></label>
+        <input asp-for="Email" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="FirstName"></label>
+        <input asp-for="FirstName" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="LastName"></label>
+        <input asp-for="LastName" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="AddressLine"></label>
+        <input asp-for="AddressLine" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="City"></label>
+        <input asp-for="City" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="PostalCode"></label>
+        <input asp-for="PostalCode" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label asp-for="SelectedRole">Role</label>
+        <select asp-for="SelectedRole" asp-items="@(new SelectList(Model.Roles))" class="form-control"></select>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a asp-action="Index" class="btn btn-secondary">Cancel</a>
+    <a asp-action="Delete" class="btn btn-secondary">Delete</a>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,111 @@
+@model IEnumerable<Boardium.Models.Inventory.GameCopy>
+
+@{
+    ViewData["Title"] = "Game Copies";
+}
+
+<h1>Game Copies</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<form asp-action="Index" asp-controller="GameCopies" method="get" class="form-inline mb-3">
+    <select id="gameSelect" name="gameId" class="form-control" style="width: 300px;">
+        <option></option>
+    </select>
+    <button type="submit" class="btn btn-primary ml-2">Filter</button>
+</form>
+<table class="table">
+    <thead>
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Game)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.InventoryNumber)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.IsAvailable)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Condition)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.RentalFee)
+        </th>
+        <th></th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Game.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.InventoryNumber)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.IsAvailable)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Condition)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RentalFee)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Barcode" asp-route-id="@item.Id">Barcode</a>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+@if (ViewBag.TotalPages > 1)
+{
+    <nav>
+        <ul class="pagination">
+            @for (int i = 1; i <= (int)ViewBag.TotalPages; i++)
+            {
+                <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+@section Scripts
+{
+    <script>
+        $(document).ready(function() {
+            $('#gameSelect').select2({
+                placeholder: "Choose game...",
+                allowClear: true,
+                minimumInputLength: 1,
+                ajax: {
+                    url: '@Url.Action("Autocomplete", "Games")',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return {
+                            term: params.term
+                        };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.results
+                        };
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Select2 AJAX error:", status, error);
+                    },
+                    cache: true
+                }
+            });
+        });
+    </script>
+}
