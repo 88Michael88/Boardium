@@ -4,23 +4,26 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Boardium.Data;
 using System.Security.Claims;
-using Boardium.Models.Inventory;
 using Boardium.Models.Rental;
-using Microsoft.VisualBasic;
-using Microsoft.AspNetCore.Identity;
+using Boardium.HelperFuncs;
+using DinkToPdf.Contracts;
+using DinkToPdf;
+using Boardium.PDFTemplates;
 
 namespace Boardium.Controllers {
-    [Route("Rentals")]
     public class RentalsController : Controller {
         private readonly BoardiumContext _context;
         private readonly ILogger<GamesController> _logger;
-        public RentalsController(BoardiumContext context, ILogger<GamesController> logger)
-        {
+        private HelperFunctions _helperFunction;
+        private readonly IConverter _converter;
+        public RentalsController(BoardiumContext context, ILogger<GamesController> logger, HelperFunctions helperFunctions, IConverter converter) {
             _context = context;
             _logger = logger;
+            _helperFunction = helperFunctions;
+            _converter = converter;
         }
 
-        [HttpGet("Index")]
+        [HttpGet("Rentals/")]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Index(int GameID, int GameCopyID) {
             GameAvailableCopyDetailsViewModel? gameCopyDetail =
@@ -61,7 +64,7 @@ namespace Boardium.Controllers {
             return View(gameCopyDetail);
         }
 
-        [HttpPost("Confirm")]
+        [HttpPost("Rentals/Confirm")]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Confirm(int GameID, int GameCopyID, DateTime DesiredBorrowDate, DateTime DesiredDueDate) {
             if (DesiredBorrowDate < DateTime.Now.Date || DesiredDueDate < DateTime.Now || DesiredDueDate < DesiredBorrowDate) // Basic Date confirmation.
@@ -86,7 +89,7 @@ namespace Boardium.Controllers {
                                           ).ToArrayAsync();
 
             if (gameBorrowInfo != null) { // Thorough Date confirmation
-                if (dateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || dateIsBetweenDates(DesiredDueDate, gameBorrowInfo))  {
+                if (_helperFunction.DateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || _helperFunction.DateIsBetweenDates(DesiredDueDate, gameBorrowInfo))  {
                     return RedirectToAction(nameof(Index), new { GameID = GameID, GameCopyID = GameCopyID });
                 }
             }
@@ -103,7 +106,8 @@ namespace Boardium.Controllers {
                 RentalFee = rentalFee,
                 LateFee = 0,
                 DamageFee = 0,
-                PaidFee = 0
+                PaidFee = 0,
+                PickupCode = _helperFunction.GenerateCode(userId, DateTime.Now, GameCopyID)
             };
 
             _context.Rentals.Add(newRental);
@@ -116,17 +120,8 @@ namespace Boardium.Controllers {
             return View(newRental);
         }
 
-        private bool dateIsBetweenDates(DateTime date, BorrowInfo[] borrowInfo) {
-            foreach (BorrowInfo borrowRow in borrowInfo) {
-                if (date <= borrowRow.DueDate.AddDays(1) && date >= borrowRow.BorrowDate.AddDays(-1)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         [Authorize]
-        [HttpGet("MyRentals")]
+        [HttpGet("Rentals/MyRentals")]
         public async Task<IActionResult> MyRentals() {
             string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var rentals = await (from r in _context.Rentals
@@ -149,6 +144,44 @@ namespace Boardium.Controllers {
                                 ).ToListAsync();
 
             return View(rentals);
+        }
+
+        public async Task<IActionResult> DownloadPDF(int PickupCode) {
+            RentalPDFTemplate rentalPDFTemplate = new RentalPDFTemplate();
+            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            PDFDataModel? pdfDataModel = await (from r in _context.Rentals
+                                               join gc in _context.GameCopies on r.GameCopyId equals gc.Id
+                                               join g in _context.Games on gc.GameId equals g.Id
+                                               where r.ApplicationUserId == userId
+                                               && r.PickupCode == PickupCode
+                                               select new PDFDataModel {
+                                                   InventoryNumber = gc.InventoryNumber,
+                                                   GameTitle = g.Title,
+                                                   PickupCode = r.PickupCode
+                                               }
+                                              ).FirstOrDefaultAsync();
+                
+
+            if (pdfDataModel == null) return NotFound();
+
+            var htmlContent = rentalPDFTemplate.getHTMLRentalPDFTemplate(pdfDataModel.InventoryNumber, pdfDataModel.GameTitle, pdfDataModel.PickupCode);
+
+            var doc = new HtmlToPdfDocument() {
+                GlobalSettings = {
+                    PaperSize = PaperKind.A5,
+                    Orientation = Orientation.Portrait
+                },
+                Objects = {
+                    new ObjectSettings() {
+                        HtmlContent = htmlContent
+                    }
+                }
+            };
+
+            var pdf = _converter.Convert(doc);
+
+            return File(pdf, "application/pdf", $"Rental_{PickupCode}.pdf");
         }
 
     }

@@ -7,6 +7,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using System.Reflection;
 using Boardium.Services.Background;
+using Boardium.HelperFuncs;
+using DinkToPdf.Contracts;
+using DinkToPdf;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +26,8 @@ builder.Services.AddScoped<UserMapper>();
 builder.Services.AddScoped<RentalMapper>();
 builder.Services.AddTransient<EmailTemplateRenderer>();
 builder.Services.AddTransient<QrCodeService>();
+builder.Services.AddTransient<HelperFunctions>();
+builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
 builder.Services.AddAuthentication();
@@ -52,7 +58,7 @@ if (app.Environment.IsDevelopment()) {
     app.UseSwagger();
     app.UseSwaggerUI(c => {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Boardium API V1");
-        c.RoutePrefix = "swagger"; // Optional: access at /swagger
+        c.RoutePrefix = "swagger"; 
     });
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();

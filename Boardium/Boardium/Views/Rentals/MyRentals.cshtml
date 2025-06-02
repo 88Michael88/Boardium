@@ -32,6 +32,7 @@
                     <th scope="col">Total Paid</th>
                     <th scope="col">Status</th>
                     <th scope="col">Pickup Code</th>
+                    <th scope="col">PDF</th>
                 </tr>
             </thead>
             <tbody>
@@ -48,6 +49,14 @@
                         <td>@rental.PaidFee.ToString("C")</td>
                         <td>@FormatEnumString(rental.Status.ToString())</td>
                         <td>@(rental.PickupCode == 0 ? "" : rental.PickupCode)</td>
+                        <td>
+                            <form method="get" asp-controller="Rentals" asp-action="DownloadPDF">
+                                <input type="hidden" name="PickupCode" value="@rental.PickupCode"/>
+                                <button type="submit" class="btn btn-outline-primary btn-sm">
+                                    Download
+                                </button>
+                            </form>
+                        </td>
                     </tr>
                 }
             </tbody>

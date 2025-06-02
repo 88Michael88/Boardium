@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore;
 using Boardium.Models.Game;
 
 namespace Boardium.Controllers {
-    [Route("Games")]
     public class GamesController : Controller {
         private readonly BoardiumContext _context;
         private readonly ILogger<GamesController> _logger;
@@ -16,7 +15,7 @@ namespace Boardium.Controllers {
             _logger = logger;
         }
 
-        [HttpGet("BoardGame")]
+        [HttpGet("Games/BoardGame")]
         public async Task<IActionResult> BoardGame(int? gameIndex) {
             if (gameIndex == null) return NotFound(); 
 
@@ -80,31 +79,51 @@ namespace Boardium.Controllers {
             return View(model);
         }
 
-        [HttpGet("Index")]
-        public async Task<IActionResult> Index(int? page) {
+        [HttpGet("Games/")]
+        public async Task<IActionResult> Index(string? category, int? page) {
             int pageSize = 10;
             int currentPage = page ?? 1;
             currentPage = currentPage <= 0 ? 1 : currentPage;
-
-            List<BoardGame> boardGames = await (from g in _context.Games
-                                               join gi in _context.GameImages on g.Id equals gi.GameId
-                                               join p in _context.Publishers on g.PublisherId equals p.Id
-                                               where gi.IsCoverImage
-                                               select new BoardGame {
-                                                   Id = g.Id,
-                                                   Title = g.Title,
-                                                   Description = g.Description,
-                                                   PathToImage = gi.ImagePath,
-                                                   Publisher = p.Name
-                                               })
-                                               .Skip((currentPage - 1) * pageSize)
-                                               .Take(pageSize)
-                                               .ToListAsync();
+            List<BoardGame> boardGames;
+            if (string.IsNullOrEmpty(category)) {
+                 boardGames = await (from g in _context.Games
+                                                    join gi in _context.GameImages on g.Id equals gi.GameId
+                                                    join p in _context.Publishers on g.PublisherId equals p.Id
+                                                    where gi.IsCoverImage
+                                                    select new BoardGame {
+                                                        Id = g.Id,
+                                                        Title = g.Title,
+                                                        Description = g.Description,
+                                                        PathToImage = gi.ImagePath,
+                                                        Publisher = p.Name
+                                                    })
+                                                   .Skip((currentPage - 1) * pageSize)
+                                                   .Take(pageSize)
+                                                   .ToListAsync();
+            } else {
+                 boardGames = await (from g in _context.Games
+                                                    join gi in _context.GameImages on g.Id equals gi.GameId
+                                                    join p in _context.Publishers on g.PublisherId equals p.Id
+                                                    where gi.IsCoverImage
+                                                    && g.Categories.Any(c => c.Name == category)
+                                                    select new BoardGame {
+                                                        Id = g.Id,
+                                                        Title = g.Title,
+                                                        Description = g.Description,
+                                                        PathToImage = gi.ImagePath,
+                                                        Publisher = p.Name
+                                                    })
+                                                   .Skip((currentPage - 1) * pageSize)
+                                                   .Take(pageSize)
+                                                   .ToListAsync();
+            }
 
             int totalGames = await _context.Games
                                            .CountAsync();
 
             BoardGameTableViewModel model = new BoardGameTableViewModel {
+                Categories = await (from c in _context.GameCategories
+                                    select c.Name).ToArrayAsync(),
                 CurrentPage = currentPage,
                 HasPreviousPage = currentPage > 1,
                 HasNextPage = currentPage * pageSize < totalGames,

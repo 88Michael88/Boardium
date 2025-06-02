@@ -4,6 +4,7 @@ using Boardium.Models.Game;
 
 namespace Boardium.Models {
     public class BoardGameTableViewModel {
+        public string[] Categories { get; set; }
         public int CurrentPage { get; set; }
         public bool HasPreviousPage { get; set; }
         public bool HasNextPage { get; set; }
