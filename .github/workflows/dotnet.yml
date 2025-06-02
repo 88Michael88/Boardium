@@ -25,4 +25,4 @@ jobs:
     - name: Build
       run: dotnet build Boardium/Boardium.sln --no-restore
     - name: Test
-      run: dotnet test Boardium/BasicUnitTests.sln --no-build --verbosity normal
+      run: dotnet test Boardium/Boardium.sln --no-build --verbosity normal
