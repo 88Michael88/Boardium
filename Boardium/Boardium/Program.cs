@@ -10,8 +10,12 @@ using Boardium.Services.Background;
 using Boardium.HelperFuncs;
 using DinkToPdf.Contracts;
 using DinkToPdf;
+using Serilog;
 
-
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Error() // 
+    .WriteTo.File("Logs/errors.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -37,7 +41,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<BoardiumContext>();
-
+builder.Host.UseSerilog();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";

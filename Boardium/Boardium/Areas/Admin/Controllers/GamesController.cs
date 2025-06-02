@@ -41,6 +41,8 @@ namespace Boardium.Admin.Controllers
         // GET: Games
         public async Task<IActionResult> Index()
         {
+            _logger.LogInformation("Getting all Games");
+            _logger.LogError("This is an error log example");
             var boardiumContext = _context.Games.Include(g => g.Publisher).Include(g => g.Categories);
             return View(await boardiumContext.ToListAsync());
         }
