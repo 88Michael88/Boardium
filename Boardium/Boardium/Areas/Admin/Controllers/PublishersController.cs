@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Boardium.Areas.Admin.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -15,17 +16,18 @@ namespace Boardium.Areas.Admin.Controllers
     [Authorize(Roles = "Admin,Employee")]
     public class PublishersController : Controller
     {
-        private readonly BoardiumContext _context;
+        private readonly IPublishersService _publishersService;
 
-        public PublishersController(BoardiumContext context)
+        public PublishersController(IPublishersService publishersService)
         {
-            _context = context;
+            _publishersService = publishersService ?? throw new ArgumentNullException(nameof(publishersService));
         }
 
         // GET: Admin/Publishers
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Publishers.ToListAsync());
+            var publishers = await _publishersService.GetAllAsync();
+            return View(publishers);
         }
 
         // GET: Admin/Publishers/Details/5
@@ -36,8 +38,7 @@ namespace Boardium.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var publisher = await _context.Publishers
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var publisher = await _publishersService.GetByIdAsync(id.Value);
             if (publisher == null)
             {
                 return NotFound();
@@ -61,8 +62,7 @@ namespace Boardium.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(publisher);
-                await _context.SaveChangesAsync();
+                await _publishersService.CreateAsync(publisher);
                 return RedirectToAction(nameof(Index));
             }
             return View(publisher);
@@ -76,7 +76,7 @@ namespace Boardium.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var publisher = await _context.Publishers.FindAsync(id);
+            var publisher = await _publishersService.GetByIdAsync(id.Value);
             if (publisher == null)
             {
                 return NotFound();
@@ -96,27 +96,26 @@ namespace Boardium.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                try
-                {
-                    _context.Update(publisher);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!PublisherExists(publisher.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                return View(publisher);
             }
-            return View(publisher);
+
+            try
+            {
+                var updateResult = await _publishersService.UpdateAsync(publisher);
+
+                if (!updateResult)
+                {
+                    return NotFound();
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Admin/Publishers/Delete/5
@@ -127,8 +126,7 @@ namespace Boardium.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var publisher = await _context.Publishers
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var publisher = await _publishersService.GetByIdAsync(id.Value);
             if (publisher == null)
             {
                 return NotFound();
@@ -142,19 +140,10 @@ namespace Boardium.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var publisher = await _context.Publishers.FindAsync(id);
-            if (publisher != null)
-            {
-                _context.Publishers.Remove(publisher);
-            }
-
-            await _context.SaveChangesAsync();
+            await _publishersService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        private bool PublisherExists(int id)
-        {
-            return _context.Publishers.Any(e => e.Id == id);
-        }
+      
     }
 }
