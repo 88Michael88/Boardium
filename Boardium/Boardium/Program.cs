@@ -27,6 +27,7 @@ builder.Services.AddScoped<UserMapper>();
 builder.Services.AddScoped<RentalMapper>();
 builder.Services.AddScoped<BarcodeService>();
 builder.Services.AddScoped<IGameCopiesService, GameCopiesService>();
+builder.Services.AddScoped<IGamesService, GamesService>();
 builder.Services.AddTransient<EmailTemplateRenderer>();
 builder.Services.AddTransient<QrCodeService>();
 builder.Services.AddTransient<HelperFunctions>();
