@@ -9,6 +9,7 @@ using System.Reflection;
 using Boardium.HelperFuncs;
 using DinkToPdf.Contracts;
 using DinkToPdf;
+using Boardium.Services.ControllerServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +24,7 @@ builder.Services.AddTransient<EmailTemplateRenderer>();
 builder.Services.AddTransient<QrCodeService>();
 builder.Services.AddTransient<PickupCodeGenerator>();
 builder.Services.AddTransient<DateBetweenChecker>();
+builder.Services.AddTransient<GameService>();
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
