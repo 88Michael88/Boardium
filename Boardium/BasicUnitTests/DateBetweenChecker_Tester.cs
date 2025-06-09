@@ -4,7 +4,7 @@ using Boardium.Models;
 namespace BasicUnitTests {
     public class HelperFunctions_Tester {
         BorrowInfo[] _borrowInfo = new BorrowInfo[3];
-        HelperFunctions _helperFunc = new HelperFunctions();
+        DateBetweenChecker _dateChecker = new DateBetweenChecker();
         [SetUp]
         public void Setup() {
             BorrowInfo firstBI = new BorrowInfo();
@@ -23,24 +23,24 @@ namespace BasicUnitTests {
 
         [Test]
         public void DateIsBetweenDates_shouldReturnTrue() {
-            bool result = _helperFunc.DateIsBetweenDates(DateTime.Now, _borrowInfo);
+            bool result = _dateChecker.DateIsBetweenDates(DateTime.Now, _borrowInfo);
             Assert.That(result, Is.True);
         }
 
         [Test]
         public void DateIsBetweenDates_shouldReturnFalse() {
-            bool result = _helperFunc.DateIsBetweenDates(DateTime.Now.AddDays(6), _borrowInfo);
+            bool result = _dateChecker.DateIsBetweenDates(DateTime.Now.AddDays(6), _borrowInfo);
             Assert.That(result, Is.False);
         }
 
         [Test]
         public void DateIsBetweenDates_shouldReturnFalse_becauseIsInTheFarFuture() {
-            bool result = _helperFunc.DateIsBetweenDates(DateTime.Now.AddDays(20), _borrowInfo);
+            bool result = _dateChecker.DateIsBetweenDates(DateTime.Now.AddDays(20), _borrowInfo);
             Assert.That(result, Is.False);
         }
         [Test]
         public void DateIsBetweenDates_shouldReturnTrue_becauseIsBetweenTheThirdPareOfDates() {
-            bool result = _helperFunc.DateIsBetweenDates(DateTime.Now.AddDays(15), _borrowInfo);
+            bool result = _dateChecker.DateIsBetweenDates(DateTime.Now.AddDays(15), _borrowInfo);
             Assert.That(result, Is.True);
         }
     }

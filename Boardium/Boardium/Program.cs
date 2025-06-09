@@ -11,8 +11,13 @@ using Boardium.Services.Background;
 using Boardium.HelperFuncs;
 using DinkToPdf.Contracts;
 using DinkToPdf;
+using Boardium.Services.ControllerServices;
+using Serilog;
 
-
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Error() // 
+    .WriteTo.File("Logs/errors.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -33,7 +38,10 @@ builder.Services.AddScoped<IRentalsService, RentalsService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddTransient<EmailTemplateRenderer>();
 builder.Services.AddTransient<QrCodeService>();
-builder.Services.AddTransient<HelperFunctions>();
+builder.Services.AddTransient<PickupCodeGenerator>();
+builder.Services.AddTransient<DateBetweenChecker>();
+builder.Services.AddTransient<GameService>();
+builder.Services.AddTransient<RentalService>();
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();
@@ -44,7 +52,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<BoardiumContext>();
-
+builder.Host.UseSerilog();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
