@@ -26,7 +26,5 @@ namespace Boardium.Models {
         public GameCondition Condition { get; set; }
         [Precision(10,2)]
         public decimal RentalFee { get; set; }
-        public DateTime? BorrowDate { get; set; }
-        public DateTime? DueDate { get; set; } 
     }
 }

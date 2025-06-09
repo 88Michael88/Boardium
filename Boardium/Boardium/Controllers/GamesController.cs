@@ -30,36 +30,17 @@ namespace Boardium.Controllers {
 
             Publisher publisher = await _context.Publishers.Where(p => p.Id == game.PublisherId).FirstAsync();
 
-            var sql = @"
-                        WITH RankedRentals AS (
-                            SELECT 
-                                GC.Id AS GameCopyID, 
-                                GC.GameId AS GameID, 
-                                GC.Condition, 
-                                GC.InventoryNumber, 
-                                GC.RentalFee,
-                                R.RentedAt AS BorrowDate, 
-                                R.DueDate,
-                                ROW_NUMBER() OVER (PARTITION BY GC.Id ORDER BY R.RentedAt ASC) AS rn
-                            FROM GameCopies AS GC
-                            LEFT OUTER JOIN Rentals AS R ON GC.Id = R.GameCopyId
-                            WHERE GC.GameId = {0} AND R.ReturnedAt IS NULL
-                        )
-                        SELECT 
-                            GameCopyID, 
-                            GameID, 
-                            InventoryNumber, 
-                            Condition, 
-                            RentalFee,
-                            BorrowDate, 
-                            DueDate
-                        FROM RankedRentals
-                        WHERE rn = 1;
-                    ";
 
-            var gameCopies = await _context.Set<GameAvailableCopy>()
-                .FromSqlRaw(sql, gameIndex)
-                .ToArrayAsync();
+            var gameCopies = await (from r in _context.GameCopies
+                                    where r.GameId == gameIndex
+                                    select new GameAvailableCopy {
+                                        Condition = r.Condition,
+                                        GameCopyID = r.Id,
+                                        GameID = r.GameId,
+                                        InventoryNumber = r.InventoryNumber,
+                                        RentalFee = r.RentalFee
+                                    }).ToArrayAsync();
+
 
             BoardGameViewModel model = new BoardGameViewModel {
                 Id = game.Id,

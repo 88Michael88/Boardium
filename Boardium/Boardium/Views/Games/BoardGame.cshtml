@@ -62,7 +62,6 @@
                             <th scope="col">Copy #</th>
                             <th scope="col">Condition</th>
                             <th scope="col">Rental Fee</th>
-                            <th scope="col">State</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -71,18 +70,6 @@
                                 <td>@copy.InventoryNumber</td>
                                 <td>@copy.Condition</td>
                                 <td>@copy.RentalFee.ToString("C")</td>
-                                @if (@copy.DueDate == null) {
-                                    <td>Available.</td>
-                                } else {
-                                    var now = DateTime.Now;
-                                    if (@copy.BorrowDate > now) {
-                                        <td>Available before @copy.BorrowDate?.ToString("dd MMMM yyyy")</td>
-                                    } else if (@copy.DueDate > now) {
-                                        <td>Available after @copy.DueDate?.ToString("dd MMMM yyyy")</td>
-                                    } else {
-                                        <td>Available</td>
-                                    }
-                                }
                     </tr>
                 }
                 </tbody>

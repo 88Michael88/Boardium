@@ -4,6 +4,7 @@ using Boardium.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Boardium.Migrations
 {
     [DbContext(typeof(BoardiumContext))]
-    partial class BoardiumContextModelSnapshot : ModelSnapshot
+    [Migration("20250609035332_ADD_Remove_GameAvailableCopy_from_the_context")]
+    partial class ADD_Remove_GameAvailableCopy_from_the_context
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
