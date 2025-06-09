@@ -14,12 +14,15 @@ namespace Boardium.Controllers {
     public class RentalsController : Controller {
         private readonly BoardiumContext _context;
         private readonly ILogger<GamesController> _logger;
-        private HelperFunctions _helperFunction;
+        private DateBetweenChecker _dateBetweenChecker;
+        private PickupCodeGenerator _pickupCodeGenerator;
         private readonly IConverter _converter;
-        public RentalsController(BoardiumContext context, ILogger<GamesController> logger, HelperFunctions helperFunctions, IConverter converter) {
+
+        public RentalsController(BoardiumContext context, ILogger<GamesController> logger, DateBetweenChecker dateBetweenChecker, PickupCodeGenerator pickupCodeGenerator, IConverter converter) {
             _context = context;
             _logger = logger;
-            _helperFunction = helperFunctions;
+            _dateBetweenChecker = dateBetweenChecker;
+            _pickupCodeGenerator = pickupCodeGenerator;
             _converter = converter;
         }
 
@@ -89,7 +92,7 @@ namespace Boardium.Controllers {
                                           ).ToArrayAsync();
 
             if (gameBorrowInfo != null) { // Thorough Date confirmation
-                if (_helperFunction.DateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || _helperFunction.DateIsBetweenDates(DesiredDueDate, gameBorrowInfo))  {
+                if (_dateBetweenChecker.DateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || _dateBetweenChecker.DateIsBetweenDates(DesiredDueDate, gameBorrowInfo))  {
                     return RedirectToAction(nameof(Index), new { GameID = GameID, GameCopyID = GameCopyID });
                 }
             }
@@ -107,7 +110,7 @@ namespace Boardium.Controllers {
                 LateFee = 0,
                 DamageFee = 0,
                 PaidFee = 0,
-                PickupCode = _helperFunction.GenerateCode(userId, DateTime.Now, GameCopyID)
+                PickupCode = _pickupCodeGenerator.GenerateCode(userId, DateTime.Now, GameCopyID)
             };
 
             _context.Rentals.Add(newRental);

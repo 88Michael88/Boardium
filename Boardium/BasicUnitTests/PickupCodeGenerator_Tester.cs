@@ -3,7 +3,7 @@ using Boardium.Models;
 
 namespace BasicUnitTests {
     public class PickupCodeGenerator_Tester {
-        HelperFunctions _helperFuncs = new HelperFunctions();
+        PickupCodeGenerator _helperFuncs = new PickupCodeGenerator();
         public static string GenerateRandomString(int length) {
             const string validChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
             Random random = new Random();
