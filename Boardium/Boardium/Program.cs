@@ -6,17 +6,26 @@ using Boardium.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using System.Reflection;
+using Boardium.Services.Background;
 using Boardium.HelperFuncs;
 using DinkToPdf.Contracts;
 using DinkToPdf;
 using Boardium.Services.ControllerServices;
+using Serilog;
 
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Error() // 
+    .WriteTo.File("Logs/errors.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.Configure<ReminderServiceOptions>(
+    builder.Configuration.GetSection("ReminderService"));
 builder.Services.AddDbContext<BoardiumContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DevelopmentConnection")));
+builder.Services.AddHostedService<ReminderService>();
 builder.Services.AddScoped<SeedData>();
 builder.Services.AddScoped<UserMapper>();
 builder.Services.AddScoped<RentalMapper>();
@@ -36,7 +45,7 @@ builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     })
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<BoardiumContext>();
-
+builder.Host.UseSerilog();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c => {
     var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
