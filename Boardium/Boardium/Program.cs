@@ -10,6 +10,7 @@ using Boardium.Services.Background;
 using Boardium.HelperFuncs;
 using DinkToPdf.Contracts;
 using DinkToPdf;
+using Boardium.Services.ControllerServices;
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -30,7 +31,10 @@ builder.Services.AddScoped<UserMapper>();
 builder.Services.AddScoped<RentalMapper>();
 builder.Services.AddTransient<EmailTemplateRenderer>();
 builder.Services.AddTransient<QrCodeService>();
-builder.Services.AddTransient<HelperFunctions>();
+builder.Services.AddTransient<PickupCodeGenerator>();
+builder.Services.AddTransient<DateBetweenChecker>();
+builder.Services.AddTransient<GameService>();
+builder.Services.AddTransient<RentalService>();
 builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<EmailService>();

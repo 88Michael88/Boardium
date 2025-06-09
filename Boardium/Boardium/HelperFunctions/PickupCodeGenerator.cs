@@ -3,15 +3,7 @@ using System.Security.Cryptography;
 using Boardium.Models;
 
 namespace Boardium.HelperFuncs {
-    public class HelperFunctions {
-        public bool DateIsBetweenDates(DateTime date, BorrowInfo[] borrowInfo) {
-            foreach (BorrowInfo borrowRow in borrowInfo) {
-                if (date <= borrowRow.DueDate.AddDays(1) && date >= borrowRow.BorrowDate) {
-                    return true;
-                }
-            }
-            return false;
-        }
+    public class PickupCodeGenerator {
 
         public int GenerateCode(string username, DateTime dateTime, int gameCopyID) {
             string combined = $"{username}-{dateTime:yyyyMMddHHmmss}-{gameCopyID}";
