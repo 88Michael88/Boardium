@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Boardium.Areas.Admin.Mappers;
+using Boardium.Areas.Admin.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -19,52 +20,25 @@ namespace Boardium.Areas.Admin.Controllers
     [Authorize(Roles = "Admin,Employee")]
     public class RentalsController : Controller
     {
+        private IRentalsService _rentalsService;
         private ILogger<RentalsController> _logger;
-        private readonly BoardiumContext _context;
-        private readonly RentalMapper _rentalMapper;
-        private readonly EmailService _emailService;
-        private readonly QrCodeService _qrCodeService;
 
-        public RentalsController(BoardiumContext context, ILogger<RentalsController> logger, RentalMapper rentalMapper,
-            EmailService emailService, QrCodeService qrCodeService)
+        public RentalsController(IRentalsService rentalsService, ILogger<RentalsController> logger)
         {
-            _logger = logger;
-            _context = context;
-            _rentalMapper = rentalMapper;
-            _emailService = emailService;
-            _qrCodeService = qrCodeService;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _rentalsService = rentalsService?? throw new ArgumentNullException(nameof(rentalsService));    
         }
 
         // GET: Admin/Rentals
         public async Task<IActionResult> Index()
         {
-            var boardiumContext = _context.Rentals.Include(r => r.ApplicationUser).Include(r => r.GameCopy);
-            return View(await boardiumContext.ToListAsync());
+            var rentals = await  _rentalsService.GetAllRentalsAsync();
+            return View(rentals);
         }
 
         public async Task<IActionResult> ProcessIndex(int? status)
         {
-            var query = _context.Rentals
-                .Include(r => r.GameCopy)
-                .ThenInclude(gc => gc.Game)
-                .Include(r => r.ApplicationUser)
-                .AsQueryable();
-
-            if (status.HasValue)
-            {
-                query = query.Where(r => (int)r.Status == status.Value);
-            }
-
-            var rentals = await query.ToListAsync();
-
-            var rentalDtos = rentals.Select(r => _rentalMapper.Map(r)).ToList();
-
-            var vm = new RentalProcessIndexViewModel
-            {
-                Rentals = rentalDtos,
-                SelectedStatus = status
-            };
-
+            var vm = await _rentalsService.ProcessIndex(status);
             return View(vm);
         }
 
@@ -76,15 +50,7 @@ namespace Boardium.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var rental = await _context.Rentals
-                .Include(r => r.ApplicationUser)
-                .Include(r => r.GameCopy)
-                .ThenInclude(gc => gc.Game)
-                .FirstOrDefaultAsync(m => m.Id == id);
-            if (rental == null)
-            {
-                return NotFound();
-            }
+            var rental = await _rentalsService.GetRentalByIdAsync(id.Value);
 
             return View(rental);
         }
@@ -93,23 +59,21 @@ namespace Boardium.Areas.Admin.Controllers
         {
             if (pickupCode == null)
             {
-                _logger.Log(LogLevel.Error, "Pickup code is null");
-                return View(pickupCode);
+                _logger.LogError("Pickup code is null");
+                return View(); // bez przekazywania null do widoku
             }
 
-            var rentalId = await _context.Rentals
-                .Where(r => r.PickupCode == pickupCode)
-                .Select(r => (int?)r.Id)
-                .FirstOrDefaultAsync();
-            Console.WriteLine(rentalId);
+            var rentalId = await _rentalsService.GetRentalIdByPickupCodeAsync(pickupCode);
+
             if (rentalId != null)
             {
-                return RedirectToAction(nameof(Process), new { id = rentalId });
+                return RedirectToAction(nameof(Process), new { id = rentalId.Value });
             }
 
             ViewBag.Error = "Nie znaleziono wypożyczenia dla podanego kodu.";
-            return View(pickupCode);
+            return View();
         }
+
 
         public async Task<IActionResult> Process(int? id)
         {
@@ -118,22 +82,13 @@ namespace Boardium.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var rental = await _context.Rentals
-                .Include(r => r.ApplicationUser)
-                .Include(r => r.GameCopy)
-                .ThenInclude(gc => gc.Game)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var rental = await _rentalsService.GetRentalByIdAsync(id.Value);
             if (rental == null)
             {
                 return NotFound();
             }
 
-            ViewBag.RentalStatus = new SelectList(
-                Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>()
-                    .Select(s => new { Id = s, Name = s.ToString() }),
-                "Id",
-                "Name",
-                rental.Status);
+            ViewBag.RentalStatus = _rentalsService.GetRentalStatusSelectList(rental.Status);
             return View(rental);
         }
 
@@ -150,59 +105,18 @@ namespace Boardium.Areas.Admin.Controllers
             if (!ModelState.IsValid)
             {
                 _logger.LogError("Invalid model state for rental {RentalId}.", rental.Id);
-
-                ViewBag.RentalStatus = new SelectList(
-                    Enum.GetValues(typeof(RentalStatus)).Cast<RentalStatus>()
-                        .Select(s => new { Id = s, Name = s.ToString() }),
-                    "Id", "Name", rental.Status);
-
-                var rentalFromDbFallback = await _context.Rentals
-                    .Include(r => r.ApplicationUser)
-                    .Include(r => r.GameCopy)
-                    .ThenInclude(gc => gc.Game)
-                    .FirstOrDefaultAsync(r => r.Id == rental.Id);
-
-                return View(rentalFromDbFallback);
+                ViewBag.RentalStatus = _rentalsService.GetRentalStatusSelectList(rental.Status);
+                var fallbackRental = await _rentalsService.GetRentalByIdAsync(rental.Id);
+                return View(fallbackRental);
             }
 
-            var rentalFromDb = await _context.Rentals
-                .FirstOrDefaultAsync(r => r.Id == rental.Id);
-
-            if (rentalFromDb == null)
+            var (success, updatedRental, sendMail) = await _rentalsService.ProcessRentalAsync(rental);
+            if (!success)
                 return NotFound();
-            bool sendMail = rental.Status == RentalStatus.WaitingForPickup &&
-                            rentalFromDb.Status != RentalStatus.WaitingForPickup;
-            rentalFromDb.RentedAt = rental.RentedAt;
-            rentalFromDb.DueDate = rental.DueDate;
-            rentalFromDb.ReturnedAt = rental.ReturnedAt;
-            rentalFromDb.Status = rental.Status;
-            rentalFromDb.Notes = rental.Notes;
-            rentalFromDb.RentalFee = rental.RentalFee;
-            rentalFromDb.LateFee = rental.LateFee;
-            rentalFromDb.DamageFee = rental.DamageFee;
-            rentalFromDb.PaidFee = rental.PaidFee;
 
-            await _context.SaveChangesAsync();
-            if (sendMail)
+            if (sendMail && updatedRental != null)
             {
-                var rentalMail = await _context.Rentals.Include(r => r.ApplicationUser).Include(r => r.GameCopy)
-                    .ThenInclude(gc => gc.Game).FirstOrDefaultAsync(r => r.Id == rentalFromDb.Id);
-
-                try
-                {
-                    var qrCodeBytes = _qrCodeService.GenerateQrCodeBytes(rentalMail.PickupCode.ToString());
-                    await _emailService.SendConfirmationAsync(
-                        rentalMail.ApplicationUser.Email,
-                        rentalMail.ApplicationUser.FirstName,
-                        rentalMail.GameCopy.Game.Title,
-                        qrCodeBytes,
-                        rentalMail.PickupCode.ToString()
-                    );
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, " Error sending confirmation email for rental {RentalId}.", rentalMail.Id);
-                }
+                await _rentalsService.SendConfirmationEmailIfNeededAsync(updatedRental);
             }
 
             return RedirectToAction(nameof(ProcessIndex));
@@ -211,8 +125,8 @@ namespace Boardium.Areas.Admin.Controllers
         // GET: Admin/Rentals/Create
         public IActionResult Create()
         {
-            ViewData["ApplicationUserId"] = new SelectList(_context.Users, "Id", "Id");
-            ViewData["GameCopyId"] = new SelectList(_context.GameCopies, "Id", "InventoryNumber");
+            ViewData["ApplicationUserId"] = _rentalsService.GetUsersSelectList();
+            ViewData["GameCopyId"] = _rentalsService.GetGameCopiesSelectList();
             return View();
         }
 
@@ -222,19 +136,22 @@ namespace Boardium.Areas.Admin.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(
-            [Bind(
-                "Id,GameCopyId,ApplicationUserId,PickupCode,RentedAt,DueDate,ReturnedAt,Status,Notes,RentalFee,LateFee,DamageFee,PaidFee")]
+            [Bind("Id,GameCopyId,ApplicationUserId,PickupCode,RentedAt,DueDate,ReturnedAt,Status,Notes,RentalFee,LateFee,DamageFee,PaidFee")]
             Rental rental)
         {
             if (ModelState.IsValid)
             {
-                _context.Add(rental);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var success = await _rentalsService.CreateRentalAsync(rental);
+                if (success)
+                {
+                    return RedirectToAction(nameof(Index));
+                }
+                ModelState.AddModelError("", "Wystąpił błąd podczas zapisu danych.");
             }
 
-            ViewData["ApplicationUserId"] = new SelectList(_context.Users, "Id", "Id", rental.ApplicationUserId);
-            ViewData["GameCopyId"] = new SelectList(_context.GameCopies, "Id", "InventoryNumber", rental.GameCopyId);
+            ViewData["ApplicationUserId"] = _rentalsService.GetUsersSelectList(rental.ApplicationUserId);
+            ViewData["GameCopyId"] = _rentalsService.GetGameCopiesSelectList(rental.GameCopyId);
+
             return View(rental);
         }
 
@@ -246,14 +163,14 @@ namespace Boardium.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var rental = await _context.Rentals.FindAsync(id);
+            var rental = await _rentalsService.GetRentalByIdAsync(id.Value);
             if (rental == null)
             {
                 return NotFound();
             }
 
-            ViewData["ApplicationUserId"] = new SelectList(_context.Users, "Id", "Id", rental.ApplicationUserId);
-            ViewData["GameCopyId"] = new SelectList(_context.GameCopies, "Id", "InventoryNumber", rental.GameCopyId);
+            ViewData["ApplicationUserId"] = _rentalsService.GetUsersSelectList(rental.ApplicationUserId);
+            ViewData["GameCopyId"] = _rentalsService.GetGameCopiesSelectList(rental.GameCopyId);
             return View(rental);
         }
 
@@ -262,10 +179,7 @@ namespace Boardium.Areas.Admin.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id,
-            [Bind(
-                "Id,GameCopyId,ApplicationUserId,PickupCode,RentedAt,DueDate,ReturnedAt,Status,Notes,RentalFee,LateFee,DamageFee,PaidFee")]
-            Rental rental)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,GameCopyId,ApplicationUserId,PickupCode,RentedAt,DueDate,ReturnedAt,Status,Notes,RentalFee,LateFee,DamageFee,PaidFee")] Rental rental)
         {
             if (id != rental.Id)
             {
@@ -274,29 +188,20 @@ namespace Boardium.Areas.Admin.Controllers
 
             if (ModelState.IsValid)
             {
-                try
+                var updated = await _rentalsService.UpdateRentalAsync(rental);
+                if (!updated)
                 {
-                    _context.Update(rental);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!RentalExists(rental.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    return NotFound();
                 }
 
-                return RedirectToAction(nameof(Index), "Rentals", new { area = "Admin" });;
+                return RedirectToAction(nameof(Index), "Rentals", new { area = "Admin" });
             }
 
-            ViewData["ApplicationUserId"] = new SelectList(_context.Users, "Id", "Id", rental.ApplicationUserId);
-            ViewData["GameCopyId"] = new SelectList(_context.GameCopies, "Id", "InventoryNumber", rental.GameCopyId);
+            ViewData["ApplicationUserId"] = _rentalsService.GetUsersSelectList(rental.ApplicationUserId);
+            ViewData["GameCopyId"] = _rentalsService.GetGameCopiesSelectList(rental.GameCopyId);
+
             return View(rental);
+        
         }
 
         // GET: Admin/Rentals/Delete/5
@@ -307,10 +212,7 @@ namespace Boardium.Areas.Admin.Controllers
                 return NotFound();
             }
 
-            var rental = await _context.Rentals
-                .Include(r => r.ApplicationUser)
-                .Include(r => r.GameCopy)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var rental = await _rentalsService.GetRentalByIdAsync(id.Value);
             if (rental == null)
             {
                 return NotFound();
@@ -324,19 +226,10 @@ namespace Boardium.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var rental = await _context.Rentals.FindAsync(id);
-            if (rental != null)
-            {
-                _context.Rentals.Remove(rental);
-            }
-
-            await _context.SaveChangesAsync();
+            await _rentalsService.DeleteAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        private bool RentalExists(int id)
-        {
-            return _context.Rentals.Any(e => e.Id == id);
-        }
+        
     }
 }
