@@ -9,58 +9,22 @@ using Boardium.HelperFuncs;
 using DinkToPdf.Contracts;
 using DinkToPdf;
 using Boardium.PDFTemplates;
+using Boardium.Services.ControllerServices;
 
 namespace Boardium.Controllers {
     public class RentalsController : Controller {
-        private readonly BoardiumContext _context;
-        private readonly ILogger<GamesController> _logger;
+        private readonly RentalService _service;
         private DateBetweenChecker _dateBetweenChecker;
-        private PickupCodeGenerator _pickupCodeGenerator;
-        private readonly IConverter _converter;
 
-        public RentalsController(BoardiumContext context, ILogger<GamesController> logger, DateBetweenChecker dateBetweenChecker, PickupCodeGenerator pickupCodeGenerator, IConverter converter) {
-            _context = context;
-            _logger = logger;
+        public RentalsController(RentalService service, DateBetweenChecker dateBetweenChecker, PickupCodeGenerator pickupCodeGenerator) {
+            _service = service;
             _dateBetweenChecker = dateBetweenChecker;
-            _pickupCodeGenerator = pickupCodeGenerator;
-            _converter = converter;
         }
 
         [HttpGet("Rentals/")]
         [Authorize(Roles = "Admin,Employee,User")]
         public async Task<IActionResult> Index(int GameID, int GameCopyID) {
-            GameAvailableCopyDetailsViewModel? gameCopyDetail =
-                await (from gc in _context.GameCopies
-                       join g in _context.Games on gc.GameId equals g.Id
-                       join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalGroup
-                       from rental in rentalGroup.DefaultIfEmpty() // LEFT JOIN
-                       join gi in _context.GameImages on gc.GameId equals gi.GameId
-                       where gc.GameId == GameID && gc.Id == GameCopyID
-                       && gi.IsCoverImage == true
-                       && rental.ReturnedAt == null
-                       orderby rental.RentedAt
-                       select new GameAvailableCopyDetailsViewModel {
-                                                                    GameCopyID = gc.Id,
-                                                                    GameID = gc.GameId,
-                                                                    Title = g.Title,
-                                                                    Condition = gc.Condition,
-                                                                    InventoryNumber = gc.InventoryNumber,
-                                                                    RentalFee = gc.RentalFee,
-                                                                    BorrowDate = rental.RentedAt,
-                                                                    DueDate = rental.DueDate,
-                                                                    CurrentBorrows = (from r in _context.Rentals
-                                                                                     where r.GameCopyId == GameCopyID
-                                                                                     && r.ReturnedAt == null
-                                                                                     && r.DueDate > DateTime.Now
-                                                                                     orderby r.RentedAt
-                                                                                     select new BorrowInfo {
-                                                                                            BorrowDate = r.RentedAt,
-                                                                                            DueDate = r.DueDate
-                                                                                     }
-                                                                                    ).ToList(),
-                                                                    PathToImage = gi.ImagePath
-                                                                    }).FirstOrDefaultAsync();
-
+            var gameCopyDetail = await _service.GetGameCopyDetailsAsync(GameID, GameCopyID);
             if (gameCopyDetail == null)
                 return NotFound();
 
@@ -73,52 +37,21 @@ namespace Boardium.Controllers {
             if (DesiredBorrowDate < DateTime.Now.Date || DesiredDueDate < DateTime.Now || DesiredDueDate < DesiredBorrowDate) // Basic Date confirmation.
                 return RedirectToAction(nameof(Index), new { GameID = GameID, GameCopyID = GameCopyID });
 
-            decimal? rentalFee = await (from gc in _context.GameCopies // Check if such a game exists.
-                                        where gc.GameId == GameID && gc.Id == GameCopyID
-                                        select gc.RentalFee
-                                        ).FirstOrDefaultAsync();
+            var rentalFee = await _service.GetRentalFee(GameID, GameCopyID);
             if (rentalFee == null) return NotFound();
 
-            BorrowInfo[] gameBorrowInfo = await (from gc in _context.GameCopies // Get all the current rentals of this game copy.
-                                                 join r in _context.Rentals on gc.Id equals r.GameCopyId into rentalGroup
-                                                 from rental in rentalGroup.DefaultIfEmpty() // LEFT JOIN
-                                                 where rental.ReturnedAt == null
-                                                 && rental.GameCopyId == GameCopyID
-                                                 && rental.DueDate > DateTime.Now
-                                                 select new BorrowInfo {
-                                                     BorrowDate = rental.RentedAt,
-                                                     DueDate = rental.DueDate,
-                                                 }
-                                          ).ToArrayAsync();
+            var gameBorrowInfo = await _service.GetBorrowInfoAsync(GameID, GameCopyID, DesiredBorrowDate, DesiredDueDate);
 
             if (gameBorrowInfo != null) { // Thorough Date confirmation
-                if (_dateBetweenChecker.DateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || _dateBetweenChecker.DateIsBetweenDates(DesiredDueDate, gameBorrowInfo))  {
+                if (_dateBetweenChecker.DateIsBetweenDates(DesiredBorrowDate, gameBorrowInfo) || _dateBetweenChecker.DateIsBetweenDates(DesiredDueDate, gameBorrowInfo)) {
                     return RedirectToAction(nameof(Index), new { GameID = GameID, GameCopyID = GameCopyID });
                 }
             }
 
-            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var newRental = new Rental {
-                GameCopyId = GameCopyID,
-                ApplicationUserId = userId,
-                RentedAt = DesiredBorrowDate,
-                DueDate = DesiredDueDate,
-                ReturnedAt = null,
-                Status = RentalStatus.WaitingForAcceptance, 
-                Notes = "",
-                RentalFee = rentalFee,
-                LateFee = 0,
-                DamageFee = 0,
-                PaidFee = 0,
-                PickupCode = _pickupCodeGenerator.GenerateCode(userId, DateTime.Now, GameCopyID)
-            };
+            string? userID = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userID == null) return NotFound();
 
-            _context.Rentals.Add(newRental);
-            await _context.SaveChangesAsync();
-
-            // TODO:
-            // Sent an email with the order.
-            // Is there a transaction made automatically, so that a different user can't rent a board game at the same time?
+            var newRental = await _service.GetRentalConfirmationAsync((string)userID, GameID, GameCopyID, DesiredBorrowDate, DesiredDueDate, (decimal)rentalFee);
 
             return View(newRental);
         }
@@ -126,63 +59,19 @@ namespace Boardium.Controllers {
         [Authorize]
         [HttpGet("Rentals/MyRentals")]
         public async Task<IActionResult> MyRentals() {
-            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var rentals = await (from r in _context.Rentals
-                                 join gc in _context.GameCopies on r.GameCopyId equals gc.Id
-                                 join g in _context.Games on gc.GameId equals g.Id
-                                 where r.ApplicationUserId == userId
-                                 select new ShowUserRentalData {
-                                     GameTitle = g.Title,
-                                     InventoryNumber = gc.InventoryNumber,
-                                     RentedAt = r.RentedAt,
-                                     DueDate = r.DueDate,
-                                     ReturnedAt = r.ReturnedAt,
-                                     Status = r.Status,
-                                     RentalFee = r.RentalFee,
-                                     LateFee = r.LateFee,
-                                     DamageFee = r.DamageFee,
-                                     PaidFee = r.PaidFee,
-                                     PickupCode = r.PickupCode
-                                 }
-                                ).ToListAsync();
+            string? userID = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userID == null) return NotFound();
+
+            var rentals = await _service.GetMyRentalInfoAsync(userID);
 
             return View(rentals);
         }
 
         public async Task<IActionResult> DownloadPDF(int PickupCode) {
-            RentalPDFTemplate rentalPDFTemplate = new RentalPDFTemplate();
-            string? userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            string? userID = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userID == null) return NotFound();
 
-            PDFDataModel? pdfDataModel = await (from r in _context.Rentals
-                                               join gc in _context.GameCopies on r.GameCopyId equals gc.Id
-                                               join g in _context.Games on gc.GameId equals g.Id
-                                               where r.ApplicationUserId == userId
-                                               && r.PickupCode == PickupCode
-                                               select new PDFDataModel {
-                                                   InventoryNumber = gc.InventoryNumber,
-                                                   GameTitle = g.Title,
-                                                   PickupCode = r.PickupCode
-                                               }
-                                              ).FirstOrDefaultAsync();
-                
-
-            if (pdfDataModel == null) return NotFound();
-
-            var htmlContent = rentalPDFTemplate.getHTMLRentalPDFTemplate(pdfDataModel.InventoryNumber, pdfDataModel.GameTitle, pdfDataModel.PickupCode);
-
-            var doc = new HtmlToPdfDocument() {
-                GlobalSettings = {
-                    PaperSize = PaperKind.A5,
-                    Orientation = Orientation.Portrait
-                },
-                Objects = {
-                    new ObjectSettings() {
-                        HtmlContent = htmlContent
-                    }
-                }
-            };
-
-            var pdf = _converter.Convert(doc);
+            var pdf = await _service.GeneratePDFAsync((string)userID, PickupCode);
 
             return File(pdf, "application/pdf", $"Rental_{PickupCode}.pdf");
         }

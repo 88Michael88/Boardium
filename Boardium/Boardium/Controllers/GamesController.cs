@@ -7,12 +7,9 @@ using Boardium.Services.ControllerServices;
 
 namespace Boardium.Controllers {
     public class GamesController : Controller {
-        private readonly BoardiumContext _context;
         private readonly GameService _service;
-        private readonly ILogger<GamesController> _logger;
 
         public GamesController(ILogger<GamesController> logger, GameService service) {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _service = service ?? throw new AbandonedMutexException(nameof(service));
         }
 
